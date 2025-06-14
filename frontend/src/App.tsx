@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 // import NavBar from "./Components/Common/NavBar";
 import Home from "./Pages/Common/HomePage";
+import About from "./Pages/Common/About";
+import AuthForms from './Pages/Common/AuthForm';
 
 function App() {
 
@@ -14,14 +16,16 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/auth" element={<AuthForms />} />
           {/* <Route path="/products" element={<Products />} />
           <Route path="/categories" element={<Categories />} />
-          <Route path="/about" element={<About />} />
+          
           <Route path="/contact" element={<Contact />} /> */}
         </Routes>
       </Router>
     </>
-  )
+  );
 }
 
 export default App
