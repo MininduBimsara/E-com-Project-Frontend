@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../Redux/Store/store";
+import { loginUser, registerUser } from "../../Redux/Thunks/authThunks";
+import { clearErrors } from "../../Redux/Slicers/authSlice";
 import {
   Eye,
   EyeOff,
@@ -42,12 +46,14 @@ const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   onAuthSuccess,
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error } = useSelector((state: RootState) => state.user);
+
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [profilePreview, setProfilePreview] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
 
   // Form states
   const [loginData, setLoginData] = useState<LoginData>({
@@ -127,32 +133,55 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
     if (!validateForm()) return;
 
-    setIsLoading(true);
+    // Clear any previous Redux errors
+    dispatch(clearErrors());
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (isLogin) {
+        // Dispatch login thunk
+        const resultAction = await dispatch(
+          loginUser({
+            email: loginData.email,
+            password: loginData.password,
+          })
+        );
 
-      const userData = isLogin
-        ? { email: loginData.email, username: "User" }
-        : { ...registerData, id: Date.now() };
+        if (loginUser.fulfilled.match(resultAction)) {
+          // Login successful
+          onAuthSuccess?.(resultAction.payload);
+          onClose();
+        }
+      } else {
+        // Prepare registration data
+        const registrationData = new FormData();
+        registrationData.append("username", registerData.username);
+        registrationData.append("email", registerData.email);
+        registrationData.append("password", registerData.password);
+        registrationData.append("role", registerData.role);
 
-      onAuthSuccess?.(userData);
-      onClose();
+        if (registerData.profileImage) {
+          registrationData.append("profileImage", registerData.profileImage);
+        }
+
+        // Dispatch register thunk
+        const resultAction = await dispatch(registerUser(registrationData));
+
+        if (registerUser.fulfilled.match(resultAction)) {
+          // Registration successful
+          onAuthSuccess?.(resultAction.payload);
+          onClose();
+        }
+      }
     } catch (error) {
       console.error("Auth error:", error);
-    } finally {
-      setIsLoading(false);
+      // Error is automatically handled by Redux state
     }
   };
 
   const handleGoogleAuth = async () => {
-    // Simulate Google OAuth
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    onAuthSuccess?.({ email: "user@gmail.com", username: "Google User" });
-    onClose();
-    setIsLoading(false);
+    // TODO: Implement Google OAuth with your backend
+    // This is a placeholder for Google authentication
+    console.log("Google auth not implemented yet");
   };
 
   if (!isOpen) return null;
@@ -319,12 +348,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   {/* Submit Button */}
                   <motion.button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={loading}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-light tracking-[0.1em] text-sm hover:from-green-700 hover:to-emerald-700 transition-all duration-500 flex items-center justify-center group disabled:opacity-50"
                   >
-                    {isLoading ? (
+                    {loading ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                       <>
@@ -345,6 +374,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   onSubmit={handleSubmit}
                   className="space-y-6"
                 >
+                  {/* Redux Error Display */}
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl"
+                    >
+                      <p className="text-sm text-red-600 flex items-center">
+                        <AlertCircle className="w-4 h-4 mr-2" />
+                        {error}
+                      </p>
+                    </motion.div>
+                  )}
+
                   {/* Profile Image Upload - Centered */}
                   <div className="text-center mb-8">
                     <label className="text-sm font-light text-gray-600 tracking-wide block mb-3">
@@ -497,6 +540,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
                         )}
                       </div>
 
+                      {/* Redux Error Display */}
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl"
+                        >
+                          <p className="text-sm text-red-600 flex items-center">
+                            <AlertCircle className="w-4 h-4 mr-2" />
+                            {error}
+                          </p>
+                        </motion.div>
+                      )}
+
                       {/* Email Field */}
                       <div className="space-y-2">
                         <label className="text-sm font-light text-gray-600 tracking-wide">
@@ -637,12 +694,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   {/* Submit Button - Full Width */}
                   <motion.button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={loading}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-light tracking-[0.1em] text-sm hover:from-green-700 hover:to-emerald-700 transition-all duration-500 flex items-center justify-center group disabled:opacity-50 mt-6"
                   >
-                    {isLoading ? (
+                    {loading ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                       <>
@@ -704,6 +761,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   onClick={() => {
                     setIsLogin(!isLogin);
                     setErrors({});
+                    dispatch(clearErrors()); // Clear Redux errors when switching forms
                   }}
                   className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors"
                 >
