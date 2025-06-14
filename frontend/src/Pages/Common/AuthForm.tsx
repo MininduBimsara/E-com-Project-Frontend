@@ -12,6 +12,9 @@ import {
   CheckCircle,
   AlertCircle,
   X,
+  ShoppingBag,
+  Store,
+  Shield,
 } from "lucide-react";
 
 interface AuthModalProps {
@@ -194,18 +197,16 @@ const AuthModal: React.FC<AuthModalProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="mb-4"
-            >
-              
-            </motion.div>
+            ></motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <p className="text-sm font-light text-gray-500 tracking-wider mb-2">
+              {/* <p className="text-sm font-light text-gray-500 tracking-wider mb-2">
                 SUSTAINABLE LIVING
-              </p>
+              </p> */}
               <h1 className="text-3xl lg:text-4xl font-light text-gray-900 tracking-wider mb-2">
                 {isLogin ? "Welcome Back" : "Create Account"}
               </h1>
@@ -345,7 +346,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   className="space-y-6"
                 >
                   {/* Profile Image Upload - Centered */}
-                  <div className="text-center mb-6">
+                  <div className="text-center mb-8">
                     <label className="text-sm font-light text-gray-600 tracking-wide block mb-3">
                       Profile Image
                     </label>
@@ -369,6 +370,90 @@ const AuthModal: React.FC<AuthModalProps> = ({
                           className="hidden"
                         />
                       </label>
+                    </div>
+                  </div>
+
+                  {/* Role Selection Cards */}
+                  <div className="mb-8">
+                    <label className="text-sm font-light text-gray-600 tracking-wide block mb-4 text-center">
+                      Choose Your Role
+                    </label>
+                    <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+                      {roles.map((role) => {
+                        const isSelected = registerData.role === role.value;
+                        const IconComponent =
+                          role.value === "customer"
+                            ? ShoppingBag
+                            : role.value === "seller"
+                            ? Store
+                            : Shield;
+
+                        return (
+                          <motion.button
+                            key={role.value}
+                            type="button"
+                            onClick={() =>
+                              setRegisterData({
+                                ...registerData,
+                                role: role.value,
+                              })
+                            }
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            className={`relative p-4 rounded-xl border-2 transition-all duration-300 group ${
+                              isSelected
+                                ? "bg-gradient-to-br from-green-50 to-emerald-50 border-green-500 shadow-md shadow-green-200/40"
+                                : "bg-white/80 border-gray-200 hover:border-green-300 hover:bg-green-50/30"
+                            }`}
+                          >
+                            {/* Selection Indicator */}
+                            {isSelected && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-green-600 rounded-full flex items-center justify-center"
+                              >
+                                <CheckCircle className="w-3 h-3 text-white" />
+                              </motion.div>
+                            )}
+
+                            {/* Icon */}
+                            <div
+                              className={`mb-2 transition-colors duration-300 ${
+                                isSelected
+                                  ? "text-green-600"
+                                  : "text-gray-400 group-hover:text-green-500"
+                              }`}
+                            >
+                              <IconComponent className="w-6 h-6 mx-auto" />
+                            </div>
+
+                            {/* Label */}
+                            <div
+                              className={`text-xs font-light tracking-wider transition-colors duration-300 ${
+                                isSelected
+                                  ? "text-green-700"
+                                  : "text-gray-600 group-hover:text-green-600"
+                              }`}
+                            >
+                              {role.label.toUpperCase()}
+                            </div>
+
+                            {/* Subtle Description */}
+                            <div
+                              className={`text-xs mt-1 transition-colors duration-300 ${
+                                isSelected
+                                  ? "text-green-600/70"
+                                  : "text-gray-400 group-hover:text-green-500/70"
+                              }`}
+                            >
+                              {role.value === "customer" && "Shop & Browse"}
+                              {role.value === "seller" && "Sell Products"}
+                              {role.value === "admin" && "Manage Platform"}
+                            </div>
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -446,29 +531,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
                             {errors.email}
                           </motion.p>
                         )}
-                      </div>
-
-                      {/* Role Selection */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-light text-gray-600 tracking-wide">
-                          Role
-                        </label>
-                        <select
-                          value={registerData.role}
-                          onChange={(e) =>
-                            setRegisterData({
-                              ...registerData,
-                              role: e.target.value,
-                            })
-                          }
-                          className="w-full bg-gray-50/80 border-2 border-gray-200/60 rounded-xl px-4 py-3 text-gray-900 font-light focus:border-green-600 focus:bg-white transition-all duration-300 focus:outline-none"
-                        >
-                          {roles.map((role) => (
-                            <option key={role.value} value={role.value}>
-                              {role.label}
-                            </option>
-                          ))}
-                        </select>
                       </div>
                     </div>
 

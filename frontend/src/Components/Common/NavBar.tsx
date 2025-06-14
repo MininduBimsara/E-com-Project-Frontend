@@ -14,32 +14,18 @@ import {
 } from "lucide-react";
 import AuthModal from "../../Pages/Common/AuthForm";
 
-interface HeaderProps {
-  cartItemCount?: number;
-  isLoggedIn?: boolean;
-  userName?: string;
-  userAvatar?: string;
-  onCartClick?: () => void;
-  onLoginSuccess?: (userData: any) => void;
-  onLogoutClick?: () => void;
-  onProfileClick?: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({
-  cartItemCount = 0, // Changed from 3 to 0
-  isLoggedIn = false, // Keep false as default
-  userName, // Remove default value
-  userAvatar, // Remove default value
-  onCartClick,
-  onLoginSuccess,
-  onLogoutClick,
-  onProfileClick,
-}) => {
+const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // These will be replaced with Redux selectors
+  const cartItemCount = 0; // TODO: Replace with useSelector
+  const isLoggedIn = false; // TODO: Replace with useSelector
+  const userName = ""; // TODO: Replace with useSelector
+  const userAvatar = ""; // TODO: Replace with useSelector
 
   // Get current path
   const location = useLocation();
@@ -88,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
-    // Here you would typically update your theme context
+    // TODO: Dispatch Redux action to update theme
   };
 
   const toggleMobileMenu = () => {
@@ -105,7 +91,23 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleAuthSuccess = (userData: any) => {
     setIsAuthModalOpen(false);
-    onLoginSuccess?.(userData);
+    // TODO: Dispatch Redux action to set user data
+    console.log("Auth success:", userData);
+  };
+
+  const handleCartClick = () => {
+    // TODO: Dispatch Redux action or navigate to cart
+    console.log("Cart clicked");
+  };
+
+  const handleLogoutClick = () => {
+    // TODO: Dispatch Redux action to logout
+    console.log("Logout clicked");
+  };
+
+  const handleProfileClick = () => {
+    // TODO: Navigate to profile page or dispatch action
+    console.log("Profile clicked");
   };
 
   return (
@@ -208,7 +210,7 @@ const Header: React.FC<HeaderProps> = ({
 
               {/* Cart Icon */}
               <motion.button
-                onClick={onCartClick}
+                onClick={handleCartClick}
                 className="relative p-2 text-gray-600 hover:text-green-700 transition-colors duration-300"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
@@ -279,7 +281,7 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
 
                         <motion.button
-                          onClick={onProfileClick}
+                          onClick={handleProfileClick}
                           className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-green-50/50 flex items-center space-x-3 transition-colors duration-200"
                           whileHover={{ x: 4 }}
                         >
@@ -290,7 +292,7 @@ const Header: React.FC<HeaderProps> = ({
                         </motion.button>
 
                         <motion.button
-                          onClick={onLogoutClick}
+                          onClick={handleLogoutClick}
                           className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50/50 flex items-center space-x-3 transition-colors duration-200"
                           whileHover={{ x: 4 }}
                         >
