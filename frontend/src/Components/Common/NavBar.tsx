@@ -9,7 +9,7 @@ import {
   User,
   LogOut,
   Settings,
-  ChevronDown,
+  Leaf,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -24,9 +24,9 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({
-  cartItemCount = 0,
-  isLoggedIn = false,
-  userName = "John Doe",
+  cartItemCount = 3,
+  isLoggedIn = true,
+  userName = "Kamal",
   userAvatar,
   onCartClick,
   onLoginClick,
@@ -49,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      setIsScrolled(window.scrollY > 50);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -88,99 +88,113 @@ const Header: React.FC<HeaderProps> = ({
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
-          ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-green-100"
-          : "bg-white/90 backdrop-blur-sm"
-      } ${isDarkMode ? "dark" : ""}`}
+          ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-green-100/50"
+          : "bg-white/90 backdrop-blur-md"
+      }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo Section */}
+        <div className="flex items-center justify-between h-20 lg:h-24">
+          {/* Left Side - Logo */}
           <motion.div
-            className="flex items-center space-x-3"
+            className="flex items-center flex-shrink-0 mr-8 lg:mr-16"
             whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
-            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg">
-              <div className="w-6 h-6 lg:w-7 lg:h-7 bg-white rounded-md flex items-center justify-center">
-                <span className="text-green-600 font-bold text-sm lg:text-base">
-                  H
-                </span>
-              </div>
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
-                Haritha
-                <span className="text-green-600 ml-1">Ceylon</span>
-              </h1>
-              <p className="text-xs text-gray-500 -mt-1">
-                Sustainable Shopping
-              </p>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Haritha Ceylon Logo"
+              className="h-10 w-auto max-w-[120px] lg:h-12 lg:max-w-[150px] object-contain"
+            />
           </motion.div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          {/* Center - Navigation (Desktop) */}
+          <div className="hidden lg:flex items-center space-x-12">
             {navigationItems.map((item, index) => (
               <motion.a
                 key={item.name}
                 href={item.href}
-                className={`relative text-sm font-medium transition-colors duration-200 ${
+                className={`relative text-sm font-light transition-all duration-300 tracking-wider ${
                   item.active
-                    ? "text-green-600"
-                    : "text-gray-700 hover:text-green-600"
+                    ? "text-green-700"
+                    : "text-gray-600 hover:text-green-700"
                 }`}
-                whileHover={{ y: -2 }}
-                transition={{ duration: 0.2 }}
+                whileHover={{ y: -1 }}
+                transition={{ duration: 0.3 }}
               >
-                {item.name}
+                {item.name.toUpperCase()}
                 {item.active && (
                   <motion.div
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-green-600 rounded-full"
+                    className="absolute -bottom-2 left-0 right-0 h-px bg-green-700"
                     layoutId="activeTab"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, scaleX: 0 }}
+                    animate={{ opacity: 1, scaleX: 1 }}
+                    transition={{ duration: 0.5 }}
                   />
                 )}
               </motion.a>
             ))}
-          </nav>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <motion.button
+            onClick={toggleMobileMenu}
+            className="lg:hidden p-3 text-gray-600 hover:text-green-700 transition-colors duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.div
+              animate={{ rotate: isMenuOpen ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {isMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </motion.div>
+          </motion.button>
 
           {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 lg:space-x-6 flex-1 justify-end">
+            {/* Dark Mode Toggle */}
+            <motion.button
+              onClick={toggleDarkMode}
+              className="p-2 text-gray-600 hover:text-green-700 transition-colors duration-300"
+              whileHover={{ scale: 1.1, rotate: 12 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <motion.div
+                animate={{ rotate: isDarkMode ? 180 : 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {isDarkMode ? (
+                  <Sun className="w-5 h-5" />
+                ) : (
+                  <Moon className="w-5 h-5" />
+                )}
+              </motion.div>
+            </motion.button>
+
             {/* Cart Icon */}
             <motion.button
               onClick={onCartClick}
-              className="relative p-2 text-gray-700 hover:text-green-600 transition-colors duration-200"
+              className="relative p-2 text-gray-600 hover:text-green-700 transition-colors duration-300"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
             >
-              <ShoppingBag className="w-6 h-6" />
+              <ShoppingBag className="w-5 h-5" />
               {cartItemCount > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center font-medium"
+                  whileHover={{ scale: 1.1 }}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center font-light"
                 >
                   {cartItemCount > 9 ? "9+" : cartItemCount}
                 </motion.span>
-              )}
-            </motion.button>
-
-            {/* Dark Mode Toggle */}
-            <motion.button
-              onClick={toggleDarkMode}
-              className="p-2 text-gray-700 hover:text-green-600 transition-colors duration-200"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {isDarkMode ? (
-                <Sun className="w-6 h-6" />
-              ) : (
-                <Moon className="w-6 h-6" />
               )}
             </motion.button>
 
@@ -189,7 +203,7 @@ const Header: React.FC<HeaderProps> = ({
               <div className="relative user-menu">
                 <motion.button
                   onClick={toggleUserMenu}
-                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                  className="flex items-center space-x-3 p-2 transition-colors duration-300"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -197,43 +211,64 @@ const Header: React.FC<HeaderProps> = ({
                     <img
                       src={userAvatar}
                       alt={userName}
-                      className="w-8 h-8 rounded-full object-cover"
+                      className="w-8 h-8 lg:w-9 lg:h-9 rounded-full object-cover border-2 border-green-200"
                     />
                   ) : (
-                    <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 lg:w-9 lg:h-9 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center">
                       <User className="w-4 h-4 text-white" />
                     </div>
                   )}
-                  <span className="hidden md:block text-sm font-medium text-gray-700">
-                    {userName.split(" ")[0]}
+                  <span className="hidden md:block text-sm font-light text-gray-700 tracking-wide">
+                    {userName}
                   </span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                  <motion.div
+                    animate={{ rotate: isUserMenuOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-3 h-3 text-gray-400"
+                  >
+                    <div className="w-full h-px bg-current transform rotate-45 translate-y-1"></div>
+                    <div className="w-full h-px bg-current transform -rotate-45 -translate-y-1"></div>
+                  </motion.div>
                 </motion.button>
 
                 {/* User Dropdown */}
                 <AnimatePresence>
                   {isUserMenuOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2"
+                      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute right-0 mt-4 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-green-100/50 py-2"
                     >
-                      <button
+                      <div className="px-4 py-3 border-b border-green-100/50">
+                        <div className="text-sm font-light text-gray-500 tracking-wide">
+                          Signed in as
+                        </div>
+                        <div className="text-sm font-medium text-gray-800">
+                          {userName}
+                        </div>
+                      </div>
+
+                      <motion.button
                         onClick={onProfileClick}
-                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                        className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-green-50/50 flex items-center space-x-3 transition-colors duration-200"
+                        whileHover={{ x: 4 }}
                       >
                         <Settings className="w-4 h-4" />
-                        <span>Profile Settings</span>
-                      </button>
-                      <button
+                        <span className="font-light tracking-wide">
+                          Profile Settings
+                        </span>
+                      </motion.button>
+
+                      <motion.button
                         onClick={onLogoutClick}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                        className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50/50 flex items-center space-x-3 transition-colors duration-200"
+                        whileHover={{ x: 4 }}
                       >
                         <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
-                      </button>
+                        <span className="font-light tracking-wide">Logout</span>
+                      </motion.button>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -241,27 +276,13 @@ const Header: React.FC<HeaderProps> = ({
             ) : (
               <motion.button
                 onClick={onLoginClick}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors duration-200"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="bg-transparent border border-green-600/40 text-green-700 px-6 py-2 text-sm font-light tracking-[0.1em] hover:bg-green-600 hover:text-white transition-all duration-500"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Login
+                LOGIN
               </motion.button>
             )}
-
-            {/* Mobile Menu Button */}
-            <motion.button
-              onClick={toggleMobileMenu}
-              className="lg:hidden p-2 text-gray-700 hover:text-green-600 transition-colors duration-200"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {isMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </motion.button>
           </div>
         </div>
       </div>
@@ -273,25 +294,34 @@ const Header: React.FC<HeaderProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="lg:hidden bg-white border-t border-gray-200 mobile-menu"
+            transition={{ duration: 0.4 }}
+            className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-green-100/50 mobile-menu"
           >
-            <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
+            <div className="max-w-7xl mx-auto px-4 py-8 space-y-1">
               {navigationItems.map((item, index) => (
                 <motion.a
                   key={item.name}
                   href={item.href}
-                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${
+                  className={`block px-6 py-4 text-lg font-light tracking-wider transition-all duration-300 border-b border-green-100/30 ${
                     item.active
-                      ? "text-green-600 bg-green-50"
-                      : "text-gray-700 hover:text-green-600 hover:bg-gray-50"
+                      ? "text-green-700 bg-green-50/50"
+                      : "text-gray-600 hover:text-green-700 hover:bg-green-50/30"
                   }`}
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.1, duration: 0.4 }}
                   onClick={() => setIsMenuOpen(false)}
+                  whileHover={{ x: 8 }}
                 >
-                  {item.name}
+                  {item.name.toUpperCase()}
+                  {item.active && (
+                    <motion.div
+                      className="w-8 h-px bg-green-700 mt-2"
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
+                    />
+                  )}
                 </motion.a>
               ))}
             </div>
@@ -302,63 +332,4 @@ const Header: React.FC<HeaderProps> = ({
   );
 };
 
-// Demo component to show the header in action
-const HeaderDemo: React.FC = () => {
-  const [cartCount, setCartCount] = useState(3);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
-        cartItemCount={cartCount}
-        isLoggedIn={isLoggedIn}
-        userName="Kamal Perera"
-        onCartClick={() => console.log("Cart clicked")}
-        onLoginClick={() => setIsLoggedIn(true)}
-        onLogoutClick={() => setIsLoggedIn(false)}
-        onProfileClick={() => console.log("Profile clicked")}
-      />
-
-      {/* Demo content */}
-      <div className="pt-24 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to Haritha Ceylon
-          </h1>
-          <p className="text-lg text-gray-600 mb-8">
-            Your one-stop destination for sustainable and eco-friendly products
-            in Sri Lanka.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div
-                key={item}
-                className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-              >
-                <div className="w-full h-48 bg-gradient-to-br from-green-100 to-green-200 rounded-lg mb-4"></div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Eco Product {item}
-                </h3>
-                <p className="text-gray-600 text-sm mb-4">
-                  Sustainable and environmentally friendly product description.
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-green-600 font-bold">Rs. 2,500</span>
-                  <button
-                    onClick={() => setCartCount(cartCount + 1)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors"
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default HeaderDemo;
+export default Header;

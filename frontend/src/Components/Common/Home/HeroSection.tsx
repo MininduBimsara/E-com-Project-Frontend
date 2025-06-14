@@ -1,13 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Leaf } from "lucide-react";
 
 const HeroSection: React.FC = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30 z-10"></div>
         <img
           src="./hero.jpg"
           alt="Sustainable Products"
@@ -15,166 +15,143 @@ const HeroSection: React.FC = () => {
         />
       </div>
 
+      {/* Background Pattern Overlay */}
+      <div className="absolute inset-0 z-15 opacity-10">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width=%2260%22%20height=%2260%22%20viewBox=%220%200%2060%2060%22%20xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg%20fill=%22none%22%20fill-rule=%22evenodd%22%3E%3Cg%20fill=%22%23ffffff%22%20fill-opacity=%220.03%22%3E%3Ccircle%20cx=%2230%22%20cy=%2230%22%20r=%2230%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+      </div>
+
+
       {/* Content */}
-      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center min-h-[calc(100vh-10rem)] flex flex-col justify-center">
+          {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-white"
+            className="inline-flex items-center text-white/60 px-4 py-2 text-sm font-light mb-12 tracking-wider"
           >
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center bg-green-600/20 backdrop-blur-sm border border-green-400/30 rounded-full px-4 py-2 mb-6"
-            >
-              <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-              <span className="text-green-300 text-sm font-medium">
-                Sustainable Living Made Simple
-              </span>
-            </motion.div>
-
-            {/* Main Heading */}
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-5xl lg:text-7xl font-bold mb-6 leading-tight"
-            >
-              Shop
-              <span className="block text-green-400">Sustainably</span>
-              <span className="block text-xl lg:text-2xl font-normal text-gray-300 mt-2">
-                Live Consciously
-              </span>
-            </motion.h1>
-
-            {/* Description */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-lg lg:text-xl text-gray-200 mb-8 max-w-lg leading-relaxed"
-            >
-              Discover curated eco-friendly products that make a difference.
-              Join thousands of conscious consumers creating positive impact.
-            </motion.p>
-
-            {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <button className="group bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 hover:scale-105">
-                <span>Explore Products</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button className="group border-2 border-white/30 hover:border-white/50 text-white px-8 py-4 rounded-2xl font-semibold backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center justify-center space-x-2">
-                <Play className="w-5 h-5" />
-                <span>Watch Story</span>
-              </button>
-            </motion.div>
-
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-center space-x-8 mt-12"
-            >
-              <div>
-                <div className="text-2xl font-bold text-green-400">1,250+</div>
-                <div className="text-sm text-gray-300">Happy Customers</div>
-              </div>
-              <div className="w-px h-12 bg-white/20"></div>
-              <div>
-                <div className="text-2xl font-bold text-green-400">4.8t</div>
-                <div className="text-sm text-gray-300">CO₂ Offset</div>
-              </div>
-              <div className="w-px h-12 bg-white/20"></div>
-              <div>
-                <div className="text-2xl font-bold text-green-400">100%</div>
-                <div className="text-sm text-gray-300">Eco-Certified</div>
-              </div>
-            </motion.div>
+            <Leaf className="w-4 h-4 mr-2" />
+            SUSTAINABLE LIVING MADE SIMPLE
           </motion.div>
 
-          {/* Right Side - Product Showcase */}
+          {/* Hero Typography */}
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative hidden lg:block"
+            className="space-y-8 mb-16"
           >
-            {/* Main Product Card */}
+            {/* Main Headline */}
             <div className="relative">
-              {/* <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl"
-              >
-                <div className="w-full h-80 bg-gradient-to-br from-green-400/20 to-blue-400/20 rounded-2xl mb-6 flex items-center justify-center">
-                  <div className="text-white/60 text-6xl">🌿</div>
-                </div>
-                <div className="text-white">
-                  <h3 className="text-xl font-semibold mb-2">
-                    Organic Cotton Collection
-                  </h3>
-                  <p className="text-gray-300 text-sm mb-4">
-                    Sustainable fashion for conscious living
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-green-400">
-                      Rs. 2,500
-                    </span>
-                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm">
-                      A+
-                    </span>
-                  </div>
-                </div>
-              </motion.div> */}
-
-              {/* Floating Elements */}
-              <motion.div
-                animate={{ y: [0, 15, 0], rotate: [0, 5, 0] }}
-                transition={{ duration: 5, repeat: Infinity }}
-                className="absolute -top-4 -left-4 bg-green-500/20 backdrop-blur-sm rounded-2xl p-4 border border-green-400/30"
-              >
-                <div className="text-green-300 text-sm font-medium">
-                  Zero Waste
-                </div>
-              </motion.div>
-
-              <motion.div
-                animate={{ y: [0, -12, 0], rotate: [0, -3, 0] }}
-                transition={{ duration: 6, repeat: Infinity, delay: 2 }}
-                className="absolute -bottom-4 -right-4 bg-blue-500/20 backdrop-blur-sm rounded-2xl p-4 border border-blue-400/30"
-              >
-                <div className="text-blue-300 text-sm font-medium">
-                  Carbon Neutral
-                </div>
-              </motion.div>
+              <h1 className="text-6xl lg:text-9xl font-light text-white tracking-wider">
+                Shop
+              </h1>
+              <div className="absolute inset-0 border-b border-white/10 top-1/2"></div>
             </div>
+
+            {/* Subtitle */}
+            <div className="relative">
+              <h2 className="text-4xl lg:text-7xl font-light text-green-400 tracking-wider italic">
+                Sustainably
+              </h2>
+              <div className="absolute inset-0 border-b border-green-400/20 top-1/2"></div>
+            </div>
+
+            {/* Tagline */}
+            <div className="relative">
+              <h3 className="text-3xl lg:text-5xl font-light text-white/80 tracking-wider">
+                Live Consciously
+              </h3>
+              <div className="absolute inset-0 border-b border-white/5 top-1/2"></div>
+            </div>
+          </motion.div>
+
+          {/* Description */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mb-12"
+          >
+            <div className="w-24 h-px bg-white/30 mx-auto mb-8"></div>
+            <p className="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
+              Discover curated eco-friendly products that make a difference.
+              Join thousands of conscious consumers creating positive impact.
+            </p>
+          </motion.div>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="mb-10"
+          >
+            <button className="group bg-transparent border-2 border-white/40 text-white px-12 py-4 font-light tracking-[0.2em] text-sm hover:bg-white hover:text-gray-900 transition-all duration-500 uppercase flex items-center mx-auto backdrop-blur-sm">
+              <span>Explore Products</span>
+              <ArrowRight className="w-4 h-4 ml-3 group-hover:translate-x-1 transition-transform duration-300" />
+            </button>
+          </motion.div>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+          >
+            {[
+              { value: "1,250+", label: "Happy Customers" },
+              { value: "4.8t", label: "CO₂ Offset" },
+              { value: "100%", label: "Eco-Certified" },
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.9 + index * 0.1 }}
+                className="group text-center border-b border-white/10 pb-2 hover:border-green-400/30 transition-all duration-500"
+              >
+                <div className="text-3xl lg:text-4xl font-light text-green-400 mb-2 group-hover:text-green-300 transition-colors">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-white/60 font-light tracking-wider uppercase">
+                  {stat.label}
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </div>
 
       {/* Scroll Indicator */}
-      <motion.div
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60"
+      {/* <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+        className="absolute bottom-16 left-1/2 transform -translate-x-1/2 text-white/40 z-20"
       >
-        <div className="flex flex-col items-center space-y-2">
-          <span className="text-sm">Scroll to explore</span>
-          <div className="w-px h-8 bg-gradient-to-b from-white/60 to-transparent"></div>
-        </div>
-      </motion.div>
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="flex flex-col items-center space-y-2"
+        >
+          <span className="text-xs font-light tracking-wider uppercase">
+            Scroll to explore
+          </span>
+          <div className="w-px h-12 bg-gradient-to-b from-white/40 to-transparent"></div>
+        </motion.div>
+      </motion.div> */}
+
+      {/* Decorative Elements */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1, delay: 1.5 }}
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-green-400/30 rounded-full z-15"
+      />
     </section>
   );
 };
