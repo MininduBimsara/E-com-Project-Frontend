@@ -10,13 +10,14 @@ import {
   REGISTER,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
-import userReducer from "../Slicers/AuthSlice"; // Make sure this path is correct
+import userReducer from "../Slicers/authSlice";
+import productReducer from "../Slicers/productSlice";
 
 // Persist config
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user", "events", "googleAuth"],
+  whitelist: ["user", "productReducer", "googleAuth"],
   // We don't want to persist passwordReset state
   blacklist: ["passwordReset"],
 };
@@ -24,6 +25,7 @@ const persistConfig = {
 // Root reducer
 const rootReducer = combineReducers({
   user: userReducer,
+  products: productReducer,
   // Add other reducers here as needed
 });
 
