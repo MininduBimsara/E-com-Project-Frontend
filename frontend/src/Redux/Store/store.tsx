@@ -17,7 +17,7 @@ import productReducer from "../Slicers/productSlice";
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user", "productReducer", "googleAuth"],
+  whitelist: ["user", "products"], // ✅ Fixed: "products" matches the reducer key
   // We don't want to persist passwordReset state
   blacklist: ["passwordReset"],
 };
@@ -25,7 +25,7 @@ const persistConfig = {
 // Root reducer
 const rootReducer = combineReducers({
   user: userReducer,
-  products: productReducer,
+  products: productReducer, // ✅ This key should match whitelist
   // Add other reducers here as needed
 });
 

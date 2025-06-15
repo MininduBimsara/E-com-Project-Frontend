@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useAppDispatch, useAppSelector } from "../../Redux/Store/store";
+import { useAppDispatch, useAppSelector } from "../../Redux/Store/hook";
 import {
   getPublicProducts,
   getProducts,
@@ -11,7 +11,6 @@ import {
   setCurrentCategory,
   setCurrentSearchQuery,
   setActiveFilters,
-  clearActiveFilters,
   clearCurrentProduct,
   clearErrors,
 } from "../../Redux/Slicers/productSlice";
@@ -19,20 +18,30 @@ import ProductsHero from "../../Components/Common/Product/ProductsHero";
 import ProductsFilter from "../../Components/Common/Product/ProductsFilter";
 import ProductsGrid from "../../Components/Common/Product/ProductsGrid";
 import ProductModal from "../../Components/Common/Product/ProductModal";
-import { Product } from "../../Api/Common/authApi";
 
-// Hook for app dispatch and selector (create these if you don't have them)
-// You can create these in a hooks file:
-/*
-import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
-import type { RootState, AppDispatch } from '../path/to/store';
-
-export const useAppDispatch = () => useDispatch<AppDispatch>();
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-*/
+// Frontend Product interface (for UI components)
+interface FrontendProduct {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  images: string[];
+  features?: string[];
+  inStock: boolean;
+  rating: string;
+  ecoLabel: string;
+  carbonFootprint: number;
+  isNew?: boolean;
+  isPopular?: boolean;
+  isBestseller?: boolean;
+  specifications?: { [key: string]: string };
+  sustainability?: string[];
+}
 
 // Transform backend product to frontend product interface
-const transformBackendProduct = (backendProduct: any): Product => {
+const transformBackendProduct = (backendProduct: any): FrontendProduct => {
   return {
     id: backendProduct._id,
     name: backendProduct.name,
@@ -130,7 +139,9 @@ const IntegratedProductsPage: React.FC = () => {
 
   // Local state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<FrontendProduct[]>(
+    []
+  );
 
   // Load initial data
   useEffect(() => {
@@ -208,7 +219,7 @@ const IntegratedProductsPage: React.FC = () => {
   };
 
   // Handle product view
-  const handleProductView = (product: Product) => {
+  const handleProductView = (product: FrontendProduct) => {
     if (isAuthenticated) {
       // Find the original backend product ID
       const backendProduct = products.find(
