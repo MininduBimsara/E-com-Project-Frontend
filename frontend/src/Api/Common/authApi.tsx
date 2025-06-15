@@ -21,7 +21,7 @@ export interface User {
   // Add other user fields as needed
 }
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/auth`;
+const API_URL = `${import.meta.env.VITE_USER_API_URL}/api/auth`;
 
 // Create axios instance with default config
 const authApiClient: AxiosInstance = axios.create({

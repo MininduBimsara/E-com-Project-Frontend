@@ -50,7 +50,7 @@ export interface SearchFilters extends ProductFilters {
   q?: string;
 }
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/products`;
+const API_URL = `${import.meta.env.VITE_PRODUCT_API_URL}/api/products`;
 
 // Create axios instance with default config
 const productApiClient: AxiosInstance = axios.create({
