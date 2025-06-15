@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../../Redux/Store/store"; // Adjust path as needed
+import { verifyAuth, logoutUser } from "../../Redux/Thunks/authThunks"; // Adjust path as needed
 import {
   ShoppingBag,
   Sun,
@@ -21,11 +24,18 @@ const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  // These will be replaced with Redux selectors
-  const cartItemCount = 0; // TODO: Replace with useSelector
-  const isLoggedIn = false; // TODO: Replace with useSelector
-  const userName = ""; // TODO: Replace with useSelector
-  const userAvatar = ""; // TODO: Replace with useSelector
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Redux selectors
+  const { user, isAuthenticated, loading, error } = useSelector(
+    (state: RootState) => state.user
+  );
+  // const { items: cartItems } = useSelector((state: RootState) => state.cart || { items: [] });
+
+  const cartItemCount = 0; // cartItems.length || 0;
+  const isLoggedIn = isAuthenticated;
+  const userName = user?.name || user?.firstName || user?.username || "";
+  const userAvatar = user?.avatar || user?.profilePicture || "";
 
   // Get current path
   const location = useLocation();
@@ -46,6 +56,11 @@ const Header: React.FC = () => {
     }
     return currentPath.startsWith(href);
   };
+
+  // Verify authentication on component mount
+  useEffect(() => {
+    dispatch(verifyAuth());
+  }, [dispatch]);
 
   // Handle scroll effect
   useEffect(() => {
@@ -91,22 +106,29 @@ const Header: React.FC = () => {
 
   const handleAuthSuccess = (userData: any) => {
     setIsAuthModalOpen(false);
-    // TODO: Dispatch Redux action to set user data
-    console.log("Auth success:", userData);
+    // Verify auth again to update the state
+    dispatch(verifyAuth());
   };
 
   const handleCartClick = () => {
-    // TODO: Dispatch Redux action or navigate to cart
+    // TODO: Navigate to cart page
     console.log("Cart clicked");
   };
 
-  const handleLogoutClick = () => {
-    // TODO: Dispatch Redux action to logout
-    console.log("Logout clicked");
+  const handleLogoutClick = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      setIsUserMenuOpen(false);
+      // Optionally redirect to home page
+      // navigate('/');
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const handleProfileClick = () => {
-    // TODO: Navigate to profile page or dispatch action
+    setIsUserMenuOpen(false);
+    // TODO: Navigate to profile page
     console.log("Profile clicked");
   };
 
@@ -228,8 +250,25 @@ const Header: React.FC = () => {
                 )}
               </motion.button>
 
-              {/* User Menu */}
-              {isLoggedIn && userName ? (
+              {/* Authentication Section */}
+              {loading ? (
+                // Loading state
+                <div className="flex items-center space-x-2">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full"
+                  />
+                  <span className="text-sm font-light text-gray-600">
+                    Loading...
+                  </span>
+                </div>
+              ) : isLoggedIn && userName ? (
+                // User Menu (when logged in)
                 <div className="relative user-menu">
                   <motion.button
                     onClick={toggleUserMenu}
@@ -242,10 +281,17 @@ const Header: React.FC = () => {
                         src={userAvatar}
                         alt={userName}
                         className="w-8 h-8 lg:w-9 lg:h-9 rounded-full object-cover border-2 border-green-200"
+                        onError={(e) => {
+                          // Fallback to initials if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                        }}
                       />
                     ) : (
                       <div className="w-8 h-8 lg:w-9 lg:h-9 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-white" />
+                        <span className="text-white text-sm font-medium">
+                          {userName.charAt(0).toUpperCase()}
+                        </span>
                       </div>
                     )}
                     <span className="hidden md:block text-sm font-light text-gray-700 tracking-wide">
@@ -275,8 +321,8 @@ const Header: React.FC = () => {
                           <div className="text-sm font-light text-gray-500 tracking-wide">
                             Signed in as
                           </div>
-                          <div className="text-sm font-medium text-gray-800">
-                            {userName}
+                          <div className="text-sm font-medium text-gray-800 truncate">
+                            {user?.email || userName}
                           </div>
                         </div>
 
@@ -295,10 +341,11 @@ const Header: React.FC = () => {
                           onClick={handleLogoutClick}
                           className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50/50 flex items-center space-x-3 transition-colors duration-200"
                           whileHover={{ x: 4 }}
+                          disabled={loading}
                         >
                           <LogOut className="w-4 h-4" />
                           <span className="font-light tracking-wide">
-                            Logout
+                            {loading ? "Logging out..." : "Logout"}
                           </span>
                         </motion.button>
                       </motion.div>
@@ -306,13 +353,15 @@ const Header: React.FC = () => {
                   </AnimatePresence>
                 </div>
               ) : (
+                // Login Button (when not logged in)
                 <motion.button
                   onClick={handleLoginClick}
                   className="bg-transparent border border-green-600/40 text-green-700 px-6 py-2 text-sm font-light tracking-[0.1em] hover:bg-green-600 hover:text-white transition-all duration-500"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  disabled={loading}
                 >
-                  LOGIN
+                  {loading ? "LOADING..." : "LOGIN"}
                 </motion.button>
               )}
             </div>
@@ -362,6 +411,44 @@ const Header: React.FC = () => {
                     </motion.a>
                   );
                 })}
+
+                {/* Mobile Authentication Section */}
+                <div className="pt-4 border-t border-green-100/50 mt-4">
+                  {isLoggedIn && userName ? (
+                    <div className="space-y-2">
+                      <div className="px-6 py-2 text-sm font-light text-gray-500">
+                        Signed in as {userName}
+                      </div>
+                      <motion.button
+                        onClick={handleProfileClick}
+                        className="w-full text-left px-6 py-3 text-gray-700 hover:bg-green-50/50 flex items-center space-x-3"
+                        whileHover={{ x: 8 }}
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Profile Settings</span>
+                      </motion.button>
+                      <motion.button
+                        onClick={handleLogoutClick}
+                        className="w-full text-left px-6 py-3 text-red-600 hover:bg-red-50/50 flex items-center space-x-3"
+                        whileHover={{ x: 8 }}
+                        disabled={loading}
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>{loading ? "Logging out..." : "Logout"}</span>
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <motion.button
+                      onClick={handleLoginClick}
+                      className="w-full mx-6 bg-transparent border border-green-600/40 text-green-700 px-6 py-3 text-sm font-light tracking-[0.1em] hover:bg-green-600 hover:text-white transition-all duration-500"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      disabled={loading}
+                    >
+                      {loading ? "LOADING..." : "LOGIN"}
+                    </motion.button>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
@@ -374,6 +461,18 @@ const Header: React.FC = () => {
         onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
       />
+
+      {/* Error Display (Optional) */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          className="fixed top-24 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50"
+        >
+          <p className="text-sm">{error}</p>
+        </motion.div>
+      )}
     </>
   );
 };
