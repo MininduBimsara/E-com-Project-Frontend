@@ -18,6 +18,7 @@ import ProductsHero from "../../Components/Common/Product/ProductsHero";
 import ProductsFilter from "../../Components/Common/Product/ProductsFilter";
 import ProductsGrid from "../../Components/Common/Product/ProductsGrid";
 import ProductModal from "../../Components/Common/Product/ProductModal";
+import Navbar from "../../Components/Common/NavBar";
 
 // Frontend Product interface (for UI components)
 interface FrontendProduct {
@@ -39,58 +40,6 @@ interface FrontendProduct {
   specifications?: { [key: string]: string };
   sustainability?: string[];
 }
-
-// Transform backend product to frontend product interface
-const transformBackendProduct = (backendProduct: any): FrontendProduct => {
-  // Image URL construction - FIXED
-  const getImageUrl = (imageUrl: string | null) => {
-    if (!imageUrl) return [];
-
-    // If imageUrl starts with '/', it's already a relative path from backend
-    if (imageUrl.startsWith("/")) {
-      return [`${import.meta.env.VITE_PRODUCT_API_URL}${imageUrl}`];
-    }
-
-    // If it's already a full URL, use as is
-    if (imageUrl.startsWith("http")) {
-      return [imageUrl];
-    }
-
-    // If it's just a filename, construct the full URL
-    return [
-      `${import.meta.env.VITE_PRODUCT_API_URL}/product-images/${imageUrl}`,
-    ];
-  };
-
-  return {
-    id: backendProduct._id,
-    name: backendProduct.name,
-    category: backendProduct.category.toLowerCase(),
-    description: backendProduct.description,
-    price: backendProduct.price,
-    originalPrice: undefined,
-    images: getImageUrl(backendProduct.imageUrl),
-    features: [],
-    inStock: backendProduct.stock > 0,
-    rating:
-      backendProduct.ecoRating >= 4.5
-        ? "A+"
-        : backendProduct.ecoRating >= 4
-        ? "A"
-        : "B",
-    ecoLabel: getEcoLabel(backendProduct.category),
-    carbonFootprint: backendProduct.carbonFootprint,
-    isNew: isNewProduct(backendProduct.createdAt),
-    isPopular: backendProduct.ecoRating >= 4.5,
-    isBestseller: backendProduct.ecoRating >= 4.8,
-    specifications: {
-      category: backendProduct.category,
-      ecoRating: backendProduct.ecoRating.toString(),
-      stock: backendProduct.stock.toString(),
-    },
-    sustainability: getSustainabilityInfo(backendProduct.category),
-  };
-};
 
 // Helper functions
 const getEcoLabel = (category: string): string => {
@@ -130,6 +79,69 @@ const getSustainabilityInfo = (category: string): string[] => {
     default:
       return baseInfo;
   }
+};
+
+// FIXED: Single transform function with proper category handling
+const transformBackendProduct = (backendProduct: any): FrontendProduct => {
+  // console.log("Transforming product:", {
+  //   name: backendProduct.name,
+  //   originalCategory: backendProduct.category,
+  //   categoryType: typeof backendProduct.category,
+  // });
+
+  const getImageUrl = (imageUrl: string | null) => {
+    if (!imageUrl) return [];
+
+    if (imageUrl.startsWith("/")) {
+      return [`${import.meta.env.VITE_PRODUCT_API_URL}${imageUrl}`];
+    }
+
+    if (imageUrl.startsWith("http")) {
+      return [imageUrl];
+    }
+
+    return [
+      `${import.meta.env.VITE_PRODUCT_API_URL}/product-images/${imageUrl}`,
+    ];
+  };
+
+  // FIXED: Ensure category is a string and handle properly
+  const categoryValue =
+    typeof backendProduct.category === "string"
+      ? backendProduct.category.toLowerCase()
+      : String(backendProduct.category).toLowerCase();
+
+  const transformedProduct: FrontendProduct = {
+    id: backendProduct._id,
+    name: backendProduct.name,
+    category: categoryValue, // Use the properly handled category
+    description: backendProduct.description,
+    price: backendProduct.price,
+    originalPrice: undefined,
+    images: getImageUrl(backendProduct.imageUrl),
+    features: [],
+    inStock: backendProduct.stock > 0,
+    rating:
+      backendProduct.ecoRating >= 4.5
+        ? "A+"
+        : backendProduct.ecoRating >= 4
+        ? "A"
+        : "B",
+    ecoLabel: getEcoLabel(backendProduct.category),
+    carbonFootprint: backendProduct.carbonFootprint,
+    isNew: isNewProduct(backendProduct.createdAt),
+    isPopular: backendProduct.ecoRating >= 4.5,
+    isBestseller: backendProduct.ecoRating >= 4.8,
+    specifications: {
+      category: String(backendProduct.category),
+      ecoRating: backendProduct.ecoRating.toString(),
+      stock: backendProduct.stock.toString(),
+    },
+    sustainability: getSustainabilityInfo(backendProduct.category),
+  };
+
+  // console.log("Transformed product category:", transformedProduct.category);
+  return transformedProduct;
 };
 
 const ProductsPage: React.FC = () => {
@@ -190,14 +202,26 @@ const ProductsPage: React.FC = () => {
     setDisplayedProducts(transformedProducts);
   }, [products, searchResults, currentSearchQuery]);
 
-  // Handle category change
+  // FIXED: Handle category change with proper mapping
   const handleCategoryChange = (category: string) => {
+
     dispatch(setCurrentCategory(category));
     dispatch(clearCurrentProduct());
 
+    // FIXED: Map frontend lowercase categories to backend format for API calls
+    const categoryMap: { [key: string]: string } = {
+      cloths: "Cloths",
+      kitchen: "Kitchen",
+      accessories: "Accessories",
+    };
+
+    const backendCategory =
+      category === "all" ? undefined : categoryMap[category] || category;
+
+
     const filters = {
       ...activeFilters,
-      category: category === "all" ? undefined : category,
+      category: backendCategory,
     };
 
     dispatch(setActiveFilters(filters));
@@ -215,38 +239,37 @@ const ProductsPage: React.FC = () => {
     dispatch(setCurrentSearchQuery(searchTerm));
 
     if (searchTerm.trim()) {
+      // FIXED: Use the same category mapping for search
+      const categoryMap: { [key: string]: string } = {
+        cloths: "Cloths",
+        kitchen: "Kitchen",
+        accessories: "Accessories",
+      };
+
+      const backendCategory =
+        currentCategory === "all"
+          ? undefined
+          : categoryMap[currentCategory] || currentCategory;
+
       const filters = {
-        category: currentCategory === "all" ? undefined : currentCategory,
+        category: backendCategory,
         ...activeFilters,
       };
 
       dispatch(searchProducts({ searchQuery: searchTerm, filters }));
     } else {
       // Clear search and reload products
-      const filters = {
-        category: currentCategory === "all" ? undefined : currentCategory,
-        ...activeFilters,
-      };
-
-      if (isAuthenticated) {
-        dispatch(getProducts(filters));
-      } else {
-        dispatch(getPublicProducts(filters));
-      }
+      handleCategoryChange(currentCategory); // Reuse the fixed category logic
     }
   };
 
-  // Handle product view - FIXED
+  // Handle product view
   const handleProductView = (product: FrontendProduct) => {
-    console.log("Product clicked:", product);
 
-    // Set the selected product for modal immediately
     setSelectedProductForModal(product);
     setIsModalOpen(true);
 
-    // If authenticated, try to fetch detailed product info
     if (isAuthenticated) {
-      console.log("Fetching product details for:", product.id);
       dispatch(getProductById(product.id));
     }
   };
@@ -258,26 +281,28 @@ const ProductsPage: React.FC = () => {
     dispatch(clearCurrentProduct());
   };
 
-  // Transform current product for modal - FIXED
+  // Transform current product for modal
   const modalProduct = useMemo(() => {
-    // If we have detailed product from API, use it
     if (currentProduct && isModalOpen) {
       return transformBackendProduct(currentProduct);
     }
-
-    // Otherwise use the selected product
     return selectedProductForModal;
   }, [currentProduct, selectedProductForModal, isModalOpen]);
 
-  // Filter products for display
+  // FIXED: Filter products for display - client-side filtering
   const filteredProducts = useMemo(() => {
     let filtered = displayedProducts;
 
-    // Apply category filter
+
+    // Apply category filter (client-side)
     if (currentCategory !== "all") {
-      filtered = filtered.filter(
-        (product) => product.category === currentCategory
-      );
+      filtered = filtered.filter((product) => {
+        const matches = product.category === currentCategory;
+        // console.log(
+        //   `Product ${product.name}: category=${product.category}, matches=${matches}`
+        // );
+        return matches;
+      });
     }
 
     // Apply search filter (client-side backup)
@@ -292,11 +317,14 @@ const ProductsPage: React.FC = () => {
       );
     }
 
+    // console.log("Filtered results:", filtered.length);
     return filtered;
   }, [displayedProducts, currentCategory, currentSearchQuery, searchLoading]);
 
+
   return (
     <div className="min-h-screen bg-white">
+      <Navbar />
       <ProductsHero />
 
       <ProductsFilter

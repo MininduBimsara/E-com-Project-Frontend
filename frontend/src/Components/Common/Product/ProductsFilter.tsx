@@ -1,3 +1,5 @@
+// Option 1: Fix ProductsFilter.tsx to use lowercase IDs (Recommended)
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, X } from "lucide-react";
@@ -17,13 +19,12 @@ const ProductsFilter: React.FC<FilterProps> = ({
 }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+  // FIXED: Use lowercase IDs to match the transformed frontend products
   const categories = [
     { id: "all", name: "All Products", count: 150 },
-    { id: "clothing", name: "Clothing", count: 45 },
-    { id: "kitchen", name: "Kitchen", count: 38 },
-    { id: "accessories", name: "Accessories", count: 32 },
-    { id: "home", name: "Home & Living", count: 28 },
-    { id: "personal", name: "Personal Care", count: 7 },
+    { id: "cloths", name: "Cloths", count: 45 }, // lowercase id
+    { id: "kitchen", name: "Kitchen", count: 38 }, // lowercase id
+    { id: "accessories", name: "Accessories", count: 32 }, // lowercase id
   ];
 
   const clearSearch = () => {
