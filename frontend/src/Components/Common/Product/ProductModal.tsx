@@ -38,14 +38,14 @@ interface ProductModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
-  loading?: boolean; // Add loading prop
+  loading?: boolean;
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({
   product,
   isOpen,
   onClose,
-  loading = false, // Default to false
+  loading = false,
 }) => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -174,72 +174,70 @@ const ProductModal: React.FC<ProductModalProps> = ({
             onClick={onClose}
           />
 
-          {/* Modal Content */}
+          {/* Modal Content - FIXED: Added proper max-height and flex behavior */}
           <motion.div
             variants={modalVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden bg-white rounded-3xl shadow-2xl"
+            className="relative w-full max-w-6xl max-h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col lg:flex-row overflow-hidden"
           >
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-6 right-6 z-10 p-2 rounded-full bg-white/90 backdrop-blur-sm text-gray-600 hover:text-gray-900 hover:bg-white transition-all duration-300"
+              className="absolute top-6 right-6 z-20 p-2 rounded-full bg-white/90 backdrop-blur-sm text-gray-600 hover:text-gray-900 hover:bg-white transition-all duration-300"
             >
               <X className="w-6 h-6" />
             </button>
 
-            <div className="flex flex-col lg:flex-row h-full">
-              {/* Image Section */}
-              <div className="lg:w-1/2 relative">
-                {/* Main Image */}
-                <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50">
-                  <img
-                    src={getImageSrc(
-                      product.images[activeImageIndex],
-                      product.category
-                    )}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                    onError={() => setImageError(true)}
-                  />
+            {/* Image Section - FIXED: Responsive height */}
+            <div className="lg:w-1/2 relative min-h-[300px] lg:min-h-full">
+              {/* Main Image */}
+              <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50">
+                <img
+                  src={getImageSrc(
+                    product.images[activeImageIndex],
+                    product.category
+                  )}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
 
-                  {/* Badges */}
-                  <div className="absolute top-6 left-6 flex flex-col gap-2">
-                    {product.isNew && (
-                      <span className="bg-green-600/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full">
-                        NEW
-                      </span>
-                    )}
-                    {product.isPopular && (
-                      <span className="bg-amber-500/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full">
-                        POPULAR
-                      </span>
-                    )}
+                {/* Badges */}
+                <div className="absolute top-6 left-6 flex flex-col gap-2">
+                  {product.isNew && (
+                    <span className="bg-green-600/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full">
+                      NEW
+                    </span>
+                  )}
+                  {product.isPopular && (
+                    <span className="bg-amber-500/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full">
+                      POPULAR
+                    </span>
+                  )}
+                </div>
+
+                {/* Eco Rating */}
+                <div className="absolute top-6 right-16">
+                  <div
+                    className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${
+                      product.rating === "A+"
+                        ? "bg-green-600/90 text-white"
+                        : product.rating === "A"
+                        ? "bg-green-500/90 text-white"
+                        : "bg-yellow-500/90 text-white"
+                    }`}
+                  >
+                    {product.rating}
                   </div>
+                </div>
 
-                  {/* Eco Rating */}
-                  <div className="absolute top-6 right-16">
-                    <div
-                      className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${
-                        product.rating === "A+"
-                          ? "bg-green-600/90 text-white"
-                          : product.rating === "A"
-                          ? "bg-green-500/90 text-white"
-                          : "bg-yellow-500/90 text-white"
-                      }`}
-                    >
-                      {product.rating}
-                    </div>
-                  </div>
-
-                  {/* Carbon Footprint */}
-                  <div className="absolute bottom-6 left-6">
-                    <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-gray-700 flex items-center">
-                      <Leaf className="w-4 h-4 mr-2 text-green-600" />
-                      {product.carbonFootprint}kg CO₂
-                    </div>
+                {/* Carbon Footprint */}
+                <div className="absolute bottom-6 left-6">
+                  <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-gray-700 flex items-center">
+                    <Leaf className="w-4 h-4 mr-2 text-green-600" />
+                    {product.carbonFootprint}kg CO₂
                   </div>
                 </div>
 
@@ -267,10 +265,12 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Content Section */}
-              <div className="lg:w-1/2 overflow-y-auto">
-                <div className="p-8 lg:p-12">
+            {/* Content Section - FIXED: Proper scrolling */}
+            <div className="lg:w-1/2 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto">
+                <div className="p-6 lg:p-8">
                   {/* Category & Eco Label */}
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-sm uppercase tracking-[0.15em] text-green-600 font-light">
@@ -282,13 +282,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   </div>
 
                   {/* Product Name */}
-                  <h2 className="text-3xl lg:text-4xl font-light tracking-wider text-green-800 mb-4">
+                  <h2 className="text-2xl lg:text-3xl font-light tracking-wider text-green-800 mb-4">
                     {product.name}
                   </h2>
 
                   {/* Price */}
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="text-3xl lg:text-4xl font-light text-green-600 italic">
+                    <div className="text-2xl lg:text-3xl font-light text-green-600 italic">
                       Rs. {product.price.toLocaleString()}
                     </div>
                     {product.originalPrice && (
@@ -299,17 +299,17 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   </div>
 
                   {/* Description */}
-                  <p className="text-gray-600/80 font-light leading-relaxed mb-8">
+                  <p className="text-gray-600/80 font-light leading-relaxed mb-6">
                     {product.description}
                   </p>
 
                   {/* Features */}
                   {product.features && product.features.length > 0 && (
-                    <div className="mb-8">
-                      <h4 className="text-lg font-light text-gray-800 mb-4 tracking-wide">
+                    <div className="mb-6">
+                      <h4 className="text-lg font-light text-gray-800 mb-3 tracking-wide">
                         Key Features
                       </h4>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {product.features.map((feature, idx) => (
                           <div
                             key={idx}
@@ -325,11 +325,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
                   {/* Specifications */}
                   {product.specifications && (
-                    <div className="mb-8">
-                      <h4 className="text-lg font-light text-gray-800 mb-4 tracking-wide">
+                    <div className="mb-6">
+                      <h4 className="text-lg font-light text-gray-800 mb-3 tracking-wide">
                         Specifications
                       </h4>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {Object.entries(product.specifications).map(
                           ([key, value]) => (
                             <div
@@ -351,8 +351,8 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
                   {/* Sustainability */}
                   {product.sustainability && (
-                    <div className="mb-8">
-                      <h4 className="text-lg font-light text-gray-800 mb-4 tracking-wide flex items-center">
+                    <div className="mb-6">
+                      <h4 className="text-lg font-light text-gray-800 mb-3 tracking-wide flex items-center">
                         <Leaf className="w-5 h-5 mr-2 text-green-600" />
                         Sustainability
                       </h4>
@@ -369,84 +369,84 @@ const ProductModal: React.FC<ProductModalProps> = ({
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
 
-                  {/* Quantity & Actions */}
-                  <div className="space-y-6">
-                    {/* Quantity Selector */}
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm font-light text-gray-600 tracking-wider">
-                        QUANTITY:
-                      </span>
-                      <div className="flex items-center border border-gray-200 rounded-lg">
-                        <button
-                          onClick={() => handleQuantityChange(-1)}
-                          className="p-2 hover:bg-gray-50 transition-colors"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="px-4 py-2 text-gray-800 font-light min-w-[3rem] text-center">
-                          {quantity}
-                        </span>
-                        <button
-                          onClick={() => handleQuantityChange(1)}
-                          className="p-2 hover:bg-gray-50 transition-colors"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-4">
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        disabled={!product.inStock}
-                        className={`flex-1 py-4 font-light tracking-[0.1em] text-sm transition-all duration-500 flex items-center justify-center ${
-                          product.inStock
-                            ? "bg-green-600 text-white hover:bg-green-700"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        }`}
-                      >
-                        <ShoppingCart className="w-5 h-5 mr-2" />
-                        {product.inStock ? "ADD TO CART" : "OUT OF STOCK"}
-                      </motion.button>
-
+              {/* Fixed Bottom Section - Quantity & Actions */}
+              <div className="border-t border-gray-100 bg-white p-6 lg:p-8">
+                <div className="space-y-4">
+                  {/* Quantity Selector */}
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-light text-gray-600 tracking-wider">
+                      QUANTITY:
+                    </span>
+                    <div className="flex items-center border border-gray-200 rounded-lg">
                       <button
-                        onClick={() => setIsFavorite(!isFavorite)}
-                        className={`p-4 border transition-all duration-300 ${
-                          isFavorite
-                            ? "border-red-500 bg-red-50 text-red-500"
-                            : "border-gray-200 hover:border-red-500 hover:text-red-500"
-                        }`}
+                        onClick={() => handleQuantityChange(-1)}
+                        className="p-2 hover:bg-gray-50 transition-colors"
                       >
-                        <Heart
-                          className="w-5 h-5"
-                          fill={isFavorite ? "currentColor" : "none"}
-                        />
+                        <Minus className="w-4 h-4" />
                       </button>
-
-                      <button className="p-4 border border-gray-200 hover:border-green-500 hover:text-green-500 transition-all duration-300">
-                        <Share2 className="w-5 h-5" />
+                      <span className="px-4 py-2 text-gray-800 font-light min-w-[3rem] text-center">
+                        {quantity}
+                      </span>
+                      <button
+                        onClick={() => handleQuantityChange(1)}
+                        className="p-2 hover:bg-gray-50 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
                       </button>
                     </div>
+                  </div>
 
-                    {/* Service Info */}
-                    <div className="pt-6 border-t border-gray-100">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                        <div className="flex items-center text-gray-600">
-                          <Truck className="w-4 h-4 mr-2 text-green-600" />
-                          <span className="font-light">Free Shipping</span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                          <RotateCcw className="w-4 h-4 mr-2 text-green-600" />
-                          <span className="font-light">30-Day Returns</span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                          <Shield className="w-4 h-4 mr-2 text-green-600" />
-                          <span className="font-light">Quality Guarantee</span>
-                        </div>
-                      </div>
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      disabled={!product.inStock}
+                      className={`flex-1 py-3 font-light tracking-[0.1em] text-sm transition-all duration-500 flex items-center justify-center ${
+                        product.inStock
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      {product.inStock ? "ADD TO CART" : "OUT OF STOCK"}
+                    </motion.button>
+
+                    <button
+                      onClick={() => setIsFavorite(!isFavorite)}
+                      className={`p-3 border transition-all duration-300 ${
+                        isFavorite
+                          ? "border-red-500 bg-red-50 text-red-500"
+                          : "border-gray-200 hover:border-red-500 hover:text-red-500"
+                      }`}
+                    >
+                      <Heart
+                        className="w-4 h-4"
+                        fill={isFavorite ? "currentColor" : "none"}
+                      />
+                    </button>
+
+                    <button className="p-3 border border-gray-200 hover:border-green-500 hover:text-green-500 transition-all duration-300">
+                      <Share2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Service Info */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-3">
+                    <div className="flex items-center text-gray-600">
+                      <Truck className="w-3 h-3 mr-2 text-green-600" />
+                      <span className="font-light">Free Shipping</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <RotateCcw className="w-3 h-3 mr-2 text-green-600" />
+                      <span className="font-light">30-Day Returns</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <Shield className="w-3 h-3 mr-2 text-green-600" />
+                      <span className="font-light">Quality Guarantee</span>
                     </div>
                   </div>
                 </div>
