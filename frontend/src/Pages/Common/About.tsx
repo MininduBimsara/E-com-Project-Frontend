@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import Hero from "../../Components/Common/About/Hero";
 import OurMission from "../../Components/Common/About/OurMission";
@@ -7,38 +7,11 @@ import HowWeChooseProducts from "../../Components/Common/About/HowWeChooseProduc
 import NavBar from "../../Components/Common/NavBar";
 import Footer from "../../Components/Common/Footer";
 
-// Main Home Page Component
-const HomePage: React.FC = () => {
-  const [cartItemCount, setCartItemCount] = useState(3);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-
-  const handleCartClick = () => {
-    console.log("Cart clicked");
-  };
-
-  const handleLoginClick = () => {
-    setIsLoggedIn(true);
-  };
-
-  const handleLogoutClick = () => {
-    setIsLoggedIn(false);
-  };
-
-  const handleProfileClick = () => {
-    console.log("Profile clicked");
-  };
-
+// Main About Page Component
+const AboutPage: React.FC = () => {
   return (
     <div className="min-h-screen">
-      <NavBar
-        cartItemCount={cartItemCount}
-        isLoggedIn={isLoggedIn}
-        userName="Kamal Perera"
-        onCartClick={handleCartClick}
-        onLoginClick={handleLoginClick}
-        onLogoutClick={handleLogoutClick}
-        onProfileClick={handleProfileClick}
-      />
+      <NavBar />
       <Hero />
       <OurMission />
       <WhyUs />
@@ -48,4 +21,4 @@ const HomePage: React.FC = () => {
   );
 };
 
-export default HomePage;
+export default AboutPage;

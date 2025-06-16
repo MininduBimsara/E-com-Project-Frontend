@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 // import NavBar from "./Components/Common/NavBar";
 import Home from "./Pages/Common/HomePage";
 import About from "./Pages/Common/About";
+import Products from "./Pages/Common/ProductPage";
 // import AuthModal from "./Pages/Common/AuthForm";
 
 function App() {
@@ -17,8 +18,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
+          <Route path="/products" element={<Products />} />
           {/* <Route path="/auth" element={<AuthModal />} /> */}
-          {/* <Route path="/products" element={<Products />} />
+          {/* 
           <Route path="/categories" element={<Categories />} />
           
           <Route path="/contact" element={<Contact />} /> */}
