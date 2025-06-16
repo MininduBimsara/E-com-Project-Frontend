@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useAppDispatch, useAppSelector } from "../../Redux/Store/hook"; // Fixed import path
+import { useAppDispatch, useAppSelector } from "../../Redux/Store/hook";
 import {
   getPublicProducts,
   getProducts,
@@ -42,13 +42,24 @@ interface FrontendProduct {
 
 // Transform backend product to frontend product interface
 const transformBackendProduct = (backendProduct: any): FrontendProduct => {
-  // Image URL construction from filename
-  const getImageUrl = (filename: string | null) => {
-    if (!filename) return [];
+  // Image URL construction - FIXED
+  const getImageUrl = (imageUrl: string | null) => {
+    if (!imageUrl) return [];
 
-    // Since you store only filenames in DB, construct the full URL
-    // Backend serves images from /product-images/ directory
-    return [`${import.meta.env.VITE_API_URL}/product-images/${filename}`];
+    // If imageUrl starts with '/', it's already a relative path from backend
+    if (imageUrl.startsWith("/")) {
+      return [`${import.meta.env.VITE_PRODUCT_API_URL}${imageUrl}`];
+    }
+
+    // If it's already a full URL, use as is
+    if (imageUrl.startsWith("http")) {
+      return [imageUrl];
+    }
+
+    // If it's just a filename, construct the full URL
+    return [
+      `${import.meta.env.VITE_PRODUCT_API_URL}/product-images/${imageUrl}`,
+    ];
   };
 
   return {
@@ -57,9 +68,9 @@ const transformBackendProduct = (backendProduct: any): FrontendProduct => {
     category: backendProduct.category.toLowerCase(),
     description: backendProduct.description,
     price: backendProduct.price,
-    originalPrice: undefined, // You might want to add this to backend
-    images: backendProduct.imageUrl ? getImageUrl(backendProduct.imageUrl) : [],
-    features: [], // You might want to add this to backend
+    originalPrice: undefined,
+    images: getImageUrl(backendProduct.imageUrl),
+    features: [],
     inStock: backendProduct.stock > 0,
     rating:
       backendProduct.ecoRating >= 4.5
@@ -147,6 +158,8 @@ const ProductsPage: React.FC = () => {
   const [displayedProducts, setDisplayedProducts] = useState<FrontendProduct[]>(
     []
   );
+  const [selectedProductForModal, setSelectedProductForModal] =
+    useState<FrontendProduct | null>(null);
 
   // Load initial data
   useEffect(() => {
@@ -225,41 +238,36 @@ const ProductsPage: React.FC = () => {
 
   // Handle product view - FIXED
   const handleProductView = (product: FrontendProduct) => {
-    console.log("Product clicked:", product); // Debug log
+    console.log("Product clicked:", product);
 
-    // Always set modal open first
+    // Set the selected product for modal immediately
+    setSelectedProductForModal(product);
     setIsModalOpen(true);
 
     // If authenticated, try to fetch detailed product info
     if (isAuthenticated) {
-      // Find the original backend product ID
-      const backendProduct = products.find(
-        (p) => p._id === product.id || p.name === product.name
-      );
-      if (backendProduct) {
-        console.log("Fetching product details for:", backendProduct._id); // Debug log
-        dispatch(getProductById(backendProduct._id));
-      }
+      console.log("Fetching product details for:", product.id);
+      dispatch(getProductById(product.id));
     }
   };
 
   // Handle modal close
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setSelectedProductForModal(null);
     dispatch(clearCurrentProduct());
   };
 
-  // Transform current product for modal
+  // Transform current product for modal - FIXED
   const modalProduct = useMemo(() => {
-    if (!currentProduct) {
-      // If no detailed product loaded, use the basic product info
-      const selectedProduct = displayedProducts.find(
-        (p) => p.id === currentProduct?._id
-      );
-      return selectedProduct || null;
+    // If we have detailed product from API, use it
+    if (currentProduct && isModalOpen) {
+      return transformBackendProduct(currentProduct);
     }
-    return transformBackendProduct(currentProduct);
-  }, [currentProduct, displayedProducts]);
+
+    // Otherwise use the selected product
+    return selectedProductForModal;
+  }, [currentProduct, selectedProductForModal, isModalOpen]);
 
   // Filter products for display
   const filteredProducts = useMemo(() => {

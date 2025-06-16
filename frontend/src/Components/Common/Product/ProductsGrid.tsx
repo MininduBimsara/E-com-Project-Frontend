@@ -59,6 +59,7 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
     setImageErrors((prev) => new Set([...prev, productId]));
   };
 
+  // FIXED: Image source handling
   const getImageSrc = (product: Product) => {
     if (imageErrors.has(product.id)) {
       // Fallback image based on category
@@ -75,21 +76,21 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
       }
     }
 
-    // Use the first image if available, otherwise fallback
+    // Use the first image if available
     if (product.images && product.images.length > 0) {
-      const imageUrl = product.images[0];
-
-      // If it's already a full URL (transformed), use as is
-      if (imageUrl.startsWith("http")) {
-        return imageUrl;
-      }
-
-      // If it's just a filename, construct the full URL
-      return `${import.meta.env.VITE_API_URL}/product-images/${imageUrl}`;
+      return product.images[0];
     }
 
     // Final fallback
     return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+  };
+
+  // FIXED: Product view handler
+  const handleProductViewClick = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Eye button clicked for product:", product.name);
+    onProductView(product);
   };
 
   const containerVariants = {
@@ -212,6 +213,7 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
                         alt={product.name}
                         onError={() => handleImageError(product.id)}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        crossOrigin="anonymous"
                       />
 
                       {/* Image Overlay */}
@@ -292,14 +294,7 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
                         </button>
 
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            console.log(
-                              "Eye button clicked for product:",
-                              product.name
-                            ); // Debug log
-                            onProductView(product);
-                          }}
+                          onClick={(e) => handleProductViewClick(e, product)}
                           className="p-2 rounded-full bg-green-600/90 text-white backdrop-blur-sm hover:bg-green-700/90 transition-all duration-300"
                         >
                           <Eye className="w-4 h-4" />
@@ -382,7 +377,6 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
                         disabled={!product.inStock}
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Add to cart logic here
                           console.log("Add to cart clicked for:", product.name);
                         }}
                         className={`w-full py-3 font-light tracking-[0.1em] text-sm transition-all duration-500 flex items-center justify-center ${

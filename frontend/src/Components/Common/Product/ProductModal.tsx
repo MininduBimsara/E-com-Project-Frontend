@@ -87,7 +87,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
     }
 
     // Otherwise, construct URL from filename
-    return `${import.meta.env.VITE_API_URL}/product-images/${imageFilename}`;
+    return `${
+      import.meta.env.VITE_PRODUCT_API_URL
+    }/product-images/${imageFilename}`;
   };
 
   const modalVariants = {
