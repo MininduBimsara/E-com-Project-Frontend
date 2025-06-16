@@ -12,6 +12,7 @@ import {
   Truck,
   Shield,
   RotateCcw,
+  Loader2,
 } from "lucide-react";
 
 interface Product {
@@ -37,21 +38,56 @@ interface ProductModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
+  loading?: boolean; // Add loading prop
 }
 
 const ProductModal: React.FC<ProductModalProps> = ({
   product,
   isOpen,
   onClose,
+  loading = false, // Default to false
 }) => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
-  if (!product) return null;
+  // Reset state when product changes
+  React.useEffect(() => {
+    if (product) {
+      setActiveImageIndex(0);
+      setQuantity(1);
+      setImageError(false);
+    }
+  }, [product]);
 
   const handleQuantityChange = (change: number) => {
     setQuantity((prev) => Math.max(1, prev + change));
+  };
+
+  const getImageSrc = (imageFilename: string, category?: string) => {
+    if (imageError || !imageFilename) {
+      // Fallback images based on category
+      switch (category?.toLowerCase()) {
+        case "cloths":
+        case "clothing":
+          return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+        case "kitchen":
+          return "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+        case "accessories":
+          return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+        default:
+          return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+      }
+    }
+
+    // If it's already a full URL (from transformed product), use as is
+    if (imageFilename.startsWith("http")) {
+      return imageFilename;
+    }
+
+    // Otherwise, construct URL from filename
+    return `${import.meta.env.VITE_API_URL}/product-images/${imageFilename}`;
   };
 
   const modalVariants = {
@@ -84,6 +120,43 @@ const ProductModal: React.FC<ProductModalProps> = ({
     visible: { opacity: 1 },
     exit: { opacity: 0 },
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              variants={backdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              onClick={onClose}
+            />
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden bg-white rounded-3xl shadow-2xl flex items-center justify-center py-20"
+            >
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 animate-spin text-green-600 mx-auto mb-4" />
+                <p className="text-lg font-light text-gray-600">
+                  Loading product details...
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    );
+  }
+
+  // No product state
+  if (!product) return null;
 
   return (
     <AnimatePresence>
@@ -121,9 +194,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 {/* Main Image */}
                 <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50">
                   <img
-                    src={product.images[activeImageIndex]}
+                    src={getImageSrc(
+                      product.images[activeImageIndex],
+                      product.category
+                    )}
                     alt={product.name}
                     className="w-full h-full object-cover"
+                    onError={() => setImageError(true)}
                   />
 
                   {/* Badges */}
@@ -178,9 +255,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                         }`}
                       >
                         <img
-                          src={image}
+                          src={getImageSrc(image, product.category)}
                           alt={`${product.name} ${index + 1}`}
                           className="w-full h-full object-cover"
+                          onError={() => setImageError(true)}
                         />
                       </button>
                     ))}

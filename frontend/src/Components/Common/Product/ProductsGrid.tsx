@@ -62,7 +62,8 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
   const getImageSrc = (product: Product) => {
     if (imageErrors.has(product.id)) {
       // Fallback image based on category
-      switch (product.category) {
+      switch (product.category.toLowerCase()) {
+        case "cloths":
         case "clothing":
           return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
         case "kitchen":
@@ -73,10 +74,22 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
           return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
       }
     }
-    return (
-      product.images[0] ||
-      "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-    );
+
+    // Use the first image if available, otherwise fallback
+    if (product.images && product.images.length > 0) {
+      const imageUrl = product.images[0];
+
+      // If it's already a full URL (transformed), use as is
+      if (imageUrl.startsWith("http")) {
+        return imageUrl;
+      }
+
+      // If it's just a filename, construct the full URL
+      return `${import.meta.env.VITE_API_URL}/product-images/${imageUrl}`;
+    }
+
+    // Final fallback
+    return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
   };
 
   const containerVariants = {
@@ -258,7 +271,10 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
                         className="absolute bottom-4 right-4 flex gap-2"
                       >
                         <button
-                          onClick={() => toggleFavorite(product.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(product.id);
+                          }}
                           className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
                             favorites.has(product.id)
                               ? "bg-red-500/90 text-white"
@@ -276,7 +292,14 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
                         </button>
 
                         <button
-                          onClick={() => onProductView(product)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log(
+                              "Eye button clicked for product:",
+                              product.name
+                            ); // Debug log
+                            onProductView(product);
+                          }}
                           className="p-2 rounded-full bg-green-600/90 text-white backdrop-blur-sm hover:bg-green-700/90 transition-all duration-300"
                         >
                           <Eye className="w-4 h-4" />
@@ -357,6 +380,11 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         disabled={!product.inStock}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add to cart logic here
+                          console.log("Add to cart clicked for:", product.name);
+                        }}
                         className={`w-full py-3 font-light tracking-[0.1em] text-sm transition-all duration-500 flex items-center justify-center ${
                           product.inStock
                             ? "bg-transparent border border-green-600/40 text-green-700 hover:bg-green-600 hover:text-white"

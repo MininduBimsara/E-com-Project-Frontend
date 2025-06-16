@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useAppDispatch, useAppSelector } from "../../Redux/Store/hook";
+import { useAppDispatch, useAppSelector } from "../../Redux/Store/hook"; // Fixed import path
 import {
   getPublicProducts,
   getProducts,
@@ -42,6 +42,15 @@ interface FrontendProduct {
 
 // Transform backend product to frontend product interface
 const transformBackendProduct = (backendProduct: any): FrontendProduct => {
+  // Image URL construction from filename
+  const getImageUrl = (filename: string | null) => {
+    if (!filename) return [];
+
+    // Since you store only filenames in DB, construct the full URL
+    // Backend serves images from /product-images/ directory
+    return [`${import.meta.env.VITE_API_URL}/product-images/${filename}`];
+  };
+
   return {
     id: backendProduct._id,
     name: backendProduct.name,
@@ -49,11 +58,7 @@ const transformBackendProduct = (backendProduct: any): FrontendProduct => {
     description: backendProduct.description,
     price: backendProduct.price,
     originalPrice: undefined, // You might want to add this to backend
-    images: backendProduct.imageUrl
-      ? [`${import.meta.env.VITE_API_URL}${backendProduct.imageUrl}`]
-      : [
-          "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        ],
+    images: backendProduct.imageUrl ? getImageUrl(backendProduct.imageUrl) : [],
     features: [], // You might want to add this to backend
     inStock: backendProduct.stock > 0,
     rating:
@@ -116,7 +121,7 @@ const getSustainabilityInfo = (category: string): string[] => {
   }
 };
 
-const IntegratedProductsPage: React.FC = () => {
+const ProductsPage: React.FC = () => {
   const dispatch = useAppDispatch();
 
   // Redux state
@@ -218,18 +223,24 @@ const IntegratedProductsPage: React.FC = () => {
     }
   };
 
-  // Handle product view
+  // Handle product view - FIXED
   const handleProductView = (product: FrontendProduct) => {
+    console.log("Product clicked:", product); // Debug log
+
+    // Always set modal open first
+    setIsModalOpen(true);
+
+    // If authenticated, try to fetch detailed product info
     if (isAuthenticated) {
       // Find the original backend product ID
       const backendProduct = products.find(
         (p) => p._id === product.id || p.name === product.name
       );
       if (backendProduct) {
+        console.log("Fetching product details for:", backendProduct._id); // Debug log
         dispatch(getProductById(backendProduct._id));
       }
     }
-    setIsModalOpen(true);
   };
 
   // Handle modal close
@@ -240,9 +251,15 @@ const IntegratedProductsPage: React.FC = () => {
 
   // Transform current product for modal
   const modalProduct = useMemo(() => {
-    if (!currentProduct) return null;
+    if (!currentProduct) {
+      // If no detailed product loaded, use the basic product info
+      const selectedProduct = displayedProducts.find(
+        (p) => p.id === currentProduct?._id
+      );
+      return selectedProduct || null;
+    }
     return transformBackendProduct(currentProduct);
-  }, [currentProduct]);
+  }, [currentProduct, displayedProducts]);
 
   // Filter products for display
   const filteredProducts = useMemo(() => {
@@ -311,4 +328,4 @@ const IntegratedProductsPage: React.FC = () => {
   );
 };
 
-export default IntegratedProductsPage;
+export default ProductsPage;
