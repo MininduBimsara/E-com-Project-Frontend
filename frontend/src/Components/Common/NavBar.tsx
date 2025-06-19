@@ -16,8 +16,9 @@ import {
   Leaf,
 } from "lucide-react";
 import AuthModal from "../../Pages/Common/AuthForm";
+import { useCart } from "../../Context/CartContext";
 
-const Header: React.FC = () => {
+function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -25,6 +26,8 @@ const Header: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
+
+  const { itemCount, openCart } = useCart();
 
   // Redux selectors
   const { user, isAuthenticated, loading, error } = useSelector(
@@ -111,8 +114,7 @@ const Header: React.FC = () => {
   };
 
   const handleCartClick = () => {
-    // TODO: Navigate to cart page
-    console.log("Cart clicked");
+    openCart(); // Opens the cart sidebar
   };
 
   const handleLogoutClick = async () => {
@@ -236,18 +238,47 @@ const Header: React.FC = () => {
                 className="relative p-2 text-gray-600 hover:text-green-700 transition-colors duration-300"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
+                aria-label={`Shopping cart with ${itemCount} items`}
               >
                 <ShoppingBag className="w-5 h-5" />
-                {cartItemCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    whileHover={{ scale: 1.1 }}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center font-light"
-                  >
-                    {cartItemCount > 9 ? "9+" : cartItemCount}
-                  </motion.span>
-                )}
+                {/* Cart badge with actual item count */}
+                <AnimatePresence>
+                  {itemCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      whileHover={{ scale: 1.1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 15,
+                      }}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center font-light"
+                    >
+                      {itemCount > 9 ? "9+" : itemCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+
+                {/* Pulse animation for new items */}
+                <AnimatePresence>
+                  {itemCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 1, opacity: 0.6 }}
+                      animate={{
+                        scale: [1, 1.5, 1],
+                        opacity: [0.6, 0, 0.6],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      className="absolute inset-0 bg-green-600/20 rounded-full"
+                    />
+                  )}
+                </AnimatePresence>
               </motion.button>
 
               {/* Authentication Section */}
@@ -475,6 +506,6 @@ const Header: React.FC = () => {
       )}
     </>
   );
-};
+}
 
 export default Header;

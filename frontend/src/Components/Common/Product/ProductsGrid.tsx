@@ -9,6 +9,9 @@ import {
   Award,
   Loader2,
 } from "lucide-react";
+import { useCart } from "../../../Context/CartContext";
+import toast from "react-hot-toast";
+
 
 interface Product {
   id: string;
@@ -34,11 +37,7 @@ interface ProductsGridProps {
   loading?: boolean;
 }
 
-const ProductsGrid: React.FC<ProductsGridProps> = ({
-  products,
-  onProductView,
-  loading = false,
-}) => {
+function ProductsGrid({ products, onProductView, loading = false }) {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
@@ -54,6 +53,8 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
       return newFavorites;
     });
   };
+
+  const { addItem } = useCart();
 
   const handleImageError = (productId: string) => {
     setImageErrors((prev) => new Set([...prev, productId]));
@@ -76,6 +77,8 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
       }
     }
 
+
+
     // Use the first image if available
     if (product.images && product.images.length > 0) {
       return product.images[0];
@@ -91,6 +94,24 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
     e.stopPropagation();
     console.log("Eye button clicked for product:", product.name);
     onProductView(product);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (product.inStock) {
+      addItem(product, 1);
+      toast.success(`${product.name} added to cart!`, {
+        duration: 3000,
+        style: {
+          background: "rgba(34, 197, 94, 0.9)",
+          color: "white",
+          borderRadius: "12px",
+          fontWeight: "300",
+        },
+      });
+    }
   };
 
   const containerVariants = {
@@ -375,10 +396,7 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         disabled={!product.inStock}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log("Add to cart clicked for:", product.name);
-                        }}
+                        onClick={(e) => handleAddToCart(e, product)}
                         className={`w-full py-3 font-light tracking-[0.1em] text-sm transition-all duration-500 flex items-center justify-center ${
                           product.inStock
                             ? "bg-transparent border border-green-600/40 text-green-700 hover:bg-green-600 hover:text-white"
@@ -416,6 +434,6 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
       </div>
     </section>
   );
-};
+}
 
 export default ProductsGrid;
