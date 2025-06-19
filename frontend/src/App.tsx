@@ -2,30 +2,49 @@ import './App.css'
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
-// import NavBar from "./Components/Common/NavBar";
 import Home from "./Pages/Common/HomePage";
 import About from "./Pages/Common/About";
 import Products from "./Pages/Common/ProductPage";
 // import AuthModal from "./Pages/Common/AuthForm";
+
+// Import the cart system components
+import { CartProvider } from "./Context/CartContext";
+import CartSidebar from "./Components/Common/Cart/CartSidebar";
+import CheckoutPage from "./Components/Common/Cart/CheckoutPage";
+import Header from "./Components/Common/NavBar";
 
 function App() {
 
 
   return (
     <>
-      {/* <NavBar /> */}
-      <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/products" element={<Products />} />
-          {/* <Route path="/auth" element={<AuthModal />} /> */}
-          {/* 
-          <Route path="/categories" element={<Categories />} />
-          
-          <Route path="/contact" element={<Contact />} /> */}
-        </Routes>
-      </Router>
+      <CartProvider>
+        <Router>
+          <div className="min-h-screen bg-white">
+            {/* Your existing navbar with cart integration */}
+            <Header />
+
+            {/* Main content with proper top margin for fixed navbar */}
+            <div className="pt-20 lg:pt-24">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                {/* Add more routes as needed */}
+              </Routes>
+            </div>
+
+            {/* Cart sidebar - always present, shows when cart is opened */}
+            <CartSidebar
+              onCheckout={() => {
+                // Navigate to checkout page when checkout is clicked
+                window.location.href = "/checkout";
+              }}
+            />
+          </div>
+        </Router>
+      </CartProvider>
     </>
   );
 }

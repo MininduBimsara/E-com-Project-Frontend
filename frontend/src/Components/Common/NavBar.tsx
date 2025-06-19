@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "../../Redux/Store/store"; // Adjust path as needed
+import type { RootState, AppDispatch } from "../../Redux/Store/store"; // Adjust path as needed
 import { verifyAuth, logoutUser } from "../../Redux/Thunks/authThunks"; // Adjust path as needed
 import {
   ShoppingBag,
