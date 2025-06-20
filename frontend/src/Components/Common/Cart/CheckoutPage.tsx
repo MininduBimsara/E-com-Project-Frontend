@@ -16,7 +16,7 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "lucide-react";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../../Context/CartContext";
 
 interface CheckoutPageProps {
   onBack?: () => void;
