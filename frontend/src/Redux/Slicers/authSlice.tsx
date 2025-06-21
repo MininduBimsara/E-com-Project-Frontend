@@ -1,11 +1,12 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice  } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
 import {
   loginUser,
   registerUser,
   logoutUser,
   verifyAuth,
 } from "../Thunks/authThunks";
-import { User } from "../api/authApi"; // Adjust import path as needed
+import type { User } from "../../Api/Common/authApi"; // Adjust import path as needed
 
 interface AuthState {
   user: User | null;
