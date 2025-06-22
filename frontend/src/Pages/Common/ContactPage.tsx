@@ -1,9 +1,10 @@
 import React from "react";
-import ContactHeader from "./ContactHeader";
-import ContactForm from "./ContactForm";
-import ContactInfo from "./ContactInfo";
-import LocationMap from "./LocationMap";
-import FAQSection from "./FAQSection";
+
+import ContactHeader from "../../Components/Common/Contact/ContactHeader";
+import ContactForm from "../../Components/Common/Contact/ContactForm";
+import ContactInfo from "../../Components/Common/Contact/ContactInfo";
+import LocationMap from "../../Components/Common/Contact/LocationMap";
+import FAQSection from "../../Components/Common/Contact/FAQSection";
 
 const ContactPage: React.FC = () => {
   return (

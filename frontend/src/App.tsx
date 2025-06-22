@@ -12,6 +12,7 @@ import { CartProvider } from "./Context/CartContext";
 import CartSidebar from "./Components/Common/Cart/CartSidebar";
 import CheckoutPage from "./Components/Common/Cart/CheckoutPage";
 import Header from "./Components/Common/NavBar";
+import ContactPage from './Pages/Common/ContactPage';
 
 function App() {
 
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/about" element={<About />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/contact" element={<ContactPage />} />
                 {/* Add more routes as needed */}
               </Routes>
             </div>

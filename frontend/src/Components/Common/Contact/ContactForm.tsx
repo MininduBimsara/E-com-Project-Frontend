@@ -50,7 +50,7 @@ const ContactForm: React.FC = () => {
 
   if (isSubmitted) {
     return (
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -109,7 +109,7 @@ const ContactForm: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-green-50/50 to-blue-50/30 rounded-3xl p-8 lg:p-12 backdrop-blur-sm border border-green-100/50"
+          className="bg-gradient-to-br from-green-100/70 to-blue-100/80 rounded-3xl p-8 lg:p-12 backdrop-blur-sm border border-green-100/50"
         >
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Name and Email Row */}
