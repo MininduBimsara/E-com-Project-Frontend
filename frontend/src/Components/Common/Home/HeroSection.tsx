@@ -25,7 +25,7 @@ const HeroSection: React.FC = () => {
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center min-h-[calc(100vh-10rem)] flex flex-col justify-center">
           {/* Badge */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -33,7 +33,7 @@ const HeroSection: React.FC = () => {
           >
             <Leaf className="w-4 h-4 mr-2" />
             SUSTAINABLE LIVING MADE SIMPLE
-          </motion.div>
+          </motion.div> */}
 
           {/* Hero Typography */}
           <motion.div
