@@ -1,10 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  authApi,
+import type {
+  
   Credentials,
   RegisterUserData,
   User,
 } from "../../Api/Common/authApi";
+import {authApi } from "../../Api/Common/authApi";
 
 // Thunk for user login
 export const loginUser = createAsyncThunk<

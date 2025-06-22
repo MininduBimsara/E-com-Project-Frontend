@@ -1,12 +1,12 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  productApi,
+import type {
   Product,
   CreateProductData,
   UpdateProductData,
   ProductFilters,
   SearchFilters,
 } from "../../Api/Common/productApi";
+import { productApi } from "../../Api/Common/productApi";
 
 // Thunk for getting all public products
 export const getPublicProducts = createAsyncThunk<
