@@ -1,12 +1,13 @@
-// cartApi.tsx - API functions to communicate with your backend
+// cartApi.tsx - Updated with correct Vite environment variables
 import axios from "axios";
 
-// Base URL for your cart API
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+// Base URL using Vite environment variable - directly points to cart API through gateway
+const API_BASE_URL =
+  import.meta.env.VITE_CART_API_URL || "http://localhost:4005/api/cart";
 
 // Create axios instance with default config
 const cartApi = axios.create({
-  baseURL: `${API_BASE_URL}/api/cart`,
+  baseURL: API_BASE_URL, // This already includes /api/cart path
   headers: {
     "Content-Type": "application/json",
   },
@@ -40,6 +41,7 @@ cartApi.interceptors.response.use(
 
 /**
  * Get user's full cart with product details
+ * Full URL: http://localhost:4005/api/cart/{userId}
  */
 export const getCart = async (userId: string) => {
   const response = await cartApi.get(`/${userId}`);
@@ -48,6 +50,7 @@ export const getCart = async (userId: string) => {
 
 /**
  * Get lightweight cart summary
+ * Full URL: http://localhost:4005/api/cart/{userId}/summary
  */
 export const getCartSummary = async (userId: string) => {
   const response = await cartApi.get(`/${userId}/summary`);
@@ -56,6 +59,7 @@ export const getCartSummary = async (userId: string) => {
 
 /**
  * Get cart items count only
+ * Full URL: http://localhost:4005/api/cart/{userId}/count
  */
 export const getCartCount = async (userId: string) => {
   const response = await cartApi.get(`/${userId}/count`);
@@ -64,6 +68,7 @@ export const getCartCount = async (userId: string) => {
 
 /**
  * Add item to cart
+ * Full URL: http://localhost:4005/api/cart/{userId}/add
  */
 export const addToCart = async (
   userId: string,
@@ -79,6 +84,7 @@ export const addToCart = async (
 
 /**
  * Update item quantity in cart
+ * Full URL: http://localhost:4005/api/cart/{userId}/item/{productId}
  */
 export const updateCartItem = async (
   userId: string,
@@ -93,6 +99,7 @@ export const updateCartItem = async (
 
 /**
  * Remove item from cart
+ * Full URL: http://localhost:4005/api/cart/{userId}/item/{productId}
  */
 export const removeFromCart = async (userId: string, productId: string) => {
   const response = await cartApi.delete(`/${userId}/item/${productId}`);
@@ -101,6 +108,7 @@ export const removeFromCart = async (userId: string, productId: string) => {
 
 /**
  * Clear entire cart
+ * Full URL: http://localhost:4005/api/cart/{userId}/clear
  */
 export const clearCart = async (userId: string) => {
   const response = await cartApi.delete(`/${userId}/clear`);
@@ -109,6 +117,7 @@ export const clearCart = async (userId: string) => {
 
 /**
  * Update shipping cost
+ * Full URL: http://localhost:4005/api/cart/{userId}/shipping
  */
 export const updateShipping = async (userId: string, shippingCost: number) => {
   const response = await cartApi.put(`/${userId}/shipping`, {
@@ -119,6 +128,7 @@ export const updateShipping = async (userId: string, shippingCost: number) => {
 
 /**
  * Validate cart (check stock, prices, availability)
+ * Full URL: http://localhost:4005/api/cart/{userId}/validate
  */
 export const validateCart = async (userId: string) => {
   const response = await cartApi.post(`/${userId}/validate`);
@@ -131,6 +141,7 @@ export const validateCart = async (userId: string) => {
 
 /**
  * Get cart statistics (Admin only)
+ * Full URL: http://localhost:4005/api/cart/admin/statistics
  */
 export const getCartStatistics = async () => {
   const response = await cartApi.get("/admin/statistics");

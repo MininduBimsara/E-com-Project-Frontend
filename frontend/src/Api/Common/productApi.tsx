@@ -1,3 +1,4 @@
+// productApi.tsx - Updated with correct Vite environment variables
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 
 // Product interfaces
@@ -50,20 +51,45 @@ export interface SearchFilters extends ProductFilters {
   q?: string;
 }
 
-const API_URL = `${import.meta.env.VITE_PRODUCT_API_URL}/api/products`;
+// Base URL using Vite environment variable - directly points to product API through gateway
+const API_URL =
+  import.meta.env.VITE_PRODUCT_API_URL || "http://localhost:4005/api/products";
 
 // Create axios instance with default config
 const productApiClient: AxiosInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: API_URL, // This already includes /api/products path
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+// Add token to requests automatically
+productApiClient.interceptors.request.use(
+  (config) => {
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor for error handling
+productApiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("Product API Error:", error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
 // Product API functions
 export const productApi = {
   // Get all public products (no auth required)
+  // Full URL: http://localhost:4005/api/products/public
   getPublicProducts: async (filters?: ProductFilters): Promise<Product[]> => {
     try {
       const params = new URLSearchParams();
@@ -87,6 +113,7 @@ export const productApi = {
   },
 
   // Get all products (optional auth)
+  // Full URL: http://localhost:4005/api/products/
   getProducts: async (filters?: ProductFilters): Promise<Product[]> => {
     try {
       const params = new URLSearchParams();
@@ -110,6 +137,7 @@ export const productApi = {
   },
 
   // Get product by ID (requires auth)
+  // Full URL: http://localhost:4005/api/products/details/{productId}
   getProductById: async (productId: string): Promise<Product> => {
     try {
       const response: AxiosResponse<Product> = await productApiClient.get(
@@ -124,6 +152,7 @@ export const productApi = {
   },
 
   // Create product (requires auth)
+  // Full URL: http://localhost:4005/api/products/
   createProduct: async (
     productData: CreateProductData | FormData
   ): Promise<Product> => {
@@ -151,6 +180,7 @@ export const productApi = {
   },
 
   // Update product (requires auth)
+  // Full URL: http://localhost:4005/api/products/{productId}
   updateProduct: async (
     productId: string,
     updateData: UpdateProductData | FormData
@@ -179,6 +209,7 @@ export const productApi = {
   },
 
   // Delete product (requires auth)
+  // Full URL: http://localhost:4005/api/products/{productId}
   deleteProduct: async (productId: string): Promise<{ message: string }> => {
     try {
       const response: AxiosResponse<{ message: string }> =
@@ -192,6 +223,7 @@ export const productApi = {
   },
 
   // Get products by category
+  // Full URL: http://localhost:4005/api/products/category/{category}
   getProductsByCategory: async (
     category: string,
     options?: { limit?: number; skip?: number }
@@ -220,6 +252,7 @@ export const productApi = {
   },
 
   // Search products
+  // Full URL: http://localhost:4005/api/products/search
   searchProducts: async (
     searchQuery: string,
     filters?: SearchFilters
@@ -248,6 +281,7 @@ export const productApi = {
   },
 
   // Get featured products
+  // Full URL: http://localhost:4005/api/products/featured
   getFeaturedProducts: async (limit?: number): Promise<Product[]> => {
     try {
       const params = limit ? `?limit=${limit}` : "";
@@ -263,6 +297,7 @@ export const productApi = {
   },
 
   // Get user's products (requires auth)
+  // Full URL: http://localhost:4005/api/products/my
   getUserProducts: async (): Promise<Product[]> => {
     try {
       const response: AxiosResponse<Product[]> = await productApiClient.get(
@@ -277,6 +312,7 @@ export const productApi = {
   },
 
   // Update product stock (requires auth)
+  // Full URL: http://localhost:4005/api/products/{productId}/stock
   updateProductStock: async (
     productId: string,
     quantity: number
@@ -293,6 +329,7 @@ export const productApi = {
   },
 
   // Test API connection
+  // Full URL: http://localhost:4005/api/products/test
   testConnection: async (): Promise<{ message: string }> => {
     try {
       const response: AxiosResponse<{ message: string }> =
