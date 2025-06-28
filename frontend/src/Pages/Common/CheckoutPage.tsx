@@ -4,12 +4,12 @@ import { AnimatePresence } from "framer-motion";
 import { useCart } from "../../../Context/CartContext";
 
 // Component imports
-import CheckoutHeader from "./components/checkout/CheckoutHeader";
-import ProgressSteps from "./components/checkout/ProgressSteps";
-import ShippingForm from "./components/checkout/ShippingForm";
-import PaymentForm from "./components/checkout/PaymentForm";
-import OrderComplete from "./components/checkout/OrderComplete";
-import OrderSummary from "./components/checkout/OrderSummary";
+import CheckoutHeader from "../../Components/Common/Checkout/CheckoutHeader";
+import ProgressSteps from "../../Components/Common/Checkout/ProgressSteps";
+import ShippingForm from "../../Components/Common/Checkout/ShippingForm";
+import PaymentForm from "../../Components/Common/Checkout/PaymentForm";
+import OrderComplete from "../../Components/Common/Checkout/OrderComplete";
+import OrderSummary from "../../Components/Common/Checkout/OrderSummary";
 
 // Hook imports
 import { useCheckoutForm } from "./hooks/useCheckoutForm";
@@ -19,7 +19,7 @@ import { useCheckoutValidation } from "./hooks/useCheckoutValidation";
 import { shippingOptions, createOrderData } from "./utils/checkoutHelpers";
 
 // Type imports
-import { CheckoutPageProps } from "./types/checkout";
+import { CheckoutPageProps } from "../../Types/checkout";
 
 const CheckoutPage: React.FC<CheckoutPageProps> = ({
   onBack,
