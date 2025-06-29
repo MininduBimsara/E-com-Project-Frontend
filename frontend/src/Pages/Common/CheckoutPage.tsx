@@ -1,7 +1,7 @@
 // CheckoutPage.tsx (Refactored Main Component)
 import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { useCart } from "../../../Context/CartContext";
+import { useCart } from "../../Context/CartContext";
 
 // Component imports
 import CheckoutHeader from "../../Components/Common/Checkout/CheckoutHeader";
@@ -12,14 +12,14 @@ import OrderComplete from "../../Components/Common/Checkout/OrderComplete";
 import OrderSummary from "../../Components/Common/Checkout/OrderSummary";
 
 // Hook imports
-import { useCheckoutForm } from "./hooks/useCheckoutForm";
-import { useCheckoutValidation } from "./hooks/useCheckoutValidation";
+import { useCheckoutForm } from "../../hooks/useCheckoutForm";
+import { useCheckoutValidation } from "../../hooks/useCheckoutValidation";
 
 // Utility imports
-import { shippingOptions, createOrderData } from "./utils/checkoutHelpers";
+import { shippingOptions, createOrderData } from "../../utils/checkoutHelpers";
 
 // Type imports
-import { CheckoutPageProps } from "../../Types/checkout";
+import type { CheckoutPageProps } from "../../Types/checkout";
 
 const CheckoutPage: React.FC<CheckoutPageProps> = ({
   onBack,

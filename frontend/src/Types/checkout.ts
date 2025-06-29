@@ -1,4 +1,3 @@
-// types/checkout.ts
 export interface FormData {
   // Shipping Information
   firstName: string;
@@ -41,16 +40,7 @@ export interface OrderData {
   id: string;
   items: any[];
   total: number;
-  shippingInfo: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    address: string;
-    city: string;
-    postalCode: string;
-    province: string;
-  };
+  shippingInfo: any;
   shippingMethod: string;
   carbonFootprint: number;
   date: string;
