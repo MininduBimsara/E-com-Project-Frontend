@@ -1,6 +1,6 @@
-import './App.css'
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import "./App.css";
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 import Home from "./Pages/Common/HomePage";
 import About from "./Pages/Common/About";
@@ -10,13 +10,11 @@ import Products from "./Pages/Common/ProductPage";
 // Import the cart system components
 import { CartProvider } from "./Context/CartContext";
 import CartSidebar from "./Components/Common/Cart/CartSidebar";
-import CheckoutPage from "./Components/Common/Cart/CheckoutPage";
+import CheckoutPage from "./Pages/Common/CheckoutPage";
 import Header from "./Components/Common/NavBar";
-import ContactPage from './Pages/Common/ContactPage';
+import ContactPage from "./Pages/Common/ContactPage";
 
 function App() {
-
-
   return (
     <>
       <CartProvider>
@@ -51,4 +49,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
