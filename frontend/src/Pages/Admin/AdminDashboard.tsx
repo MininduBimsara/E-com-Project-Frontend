@@ -10,15 +10,20 @@ import {
 } from "lucide-react";
 
 // Import dashboard sections
-import OverviewSection from "./sections/OverviewSection";
-import UsersSection from "./sections/UsersSection";
-import ProductsSection from "./sections/ProductsSection";
-import OrdersSection from "./sections/OrdersSection";
-import TabButton from "./components/TabButton";
-import QuickStats from "./components/QuickStats";
+import OverviewSection from "../../Components/Admin/Dashboard/OverviewSection";
+import UsersSection from "../../Components/Admin/Dashboard/UsersSection";
+import ProductsSection from "../../Components/Admin/Dashboard/ProductsSection";
+import OrdersSection from "../../Components/Admin/Dashboard/OrdersSection";
+import TabButton from "../../Components/Admin/Dashboard/TabButton";
+import QuickStats from "../../Components/Admin/Dashboard/QuickStats";
 
 // Types
-import { DashboardStats, User, Product, Order } from "./types/AdminTypes";
+import {
+  type DashboardStats,
+  type User,
+  type Product,
+  type Order,
+} from "../../Types/adminTypes";
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");

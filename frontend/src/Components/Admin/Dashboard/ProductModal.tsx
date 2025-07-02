@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { X, Package, Star, TrendingUp, Calendar } from "lucide-react";
-import StatusBadge from "../components/StatusBadge";
-import { ProductModalProps } from "../types/AdminTypes";
+import StatusBadge from "./StatusBadge";
+import { type ProductModalProps } from "../../../Types/adminTypes";
 
 const ProductModal: React.FC<ProductModalProps> = ({ product, onClose }) => {
   return (

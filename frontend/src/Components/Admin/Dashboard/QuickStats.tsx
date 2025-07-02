@@ -1,5 +1,5 @@
 import React from "react";
-import { User, Product, Order } from "../types/AdminTypes";
+import { type User, type Product, type Order } from "../../../Types/adminTypes";
 
 interface QuickStatsProps {
   users: User[];

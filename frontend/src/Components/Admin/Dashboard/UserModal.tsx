@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
-import StatusBadge from "../components/StatusBadge";
-import { UserModalProps } from "../types/AdminTypes";
+import StatusBadge from "./StatusBadge";
+import { type UserModalProps } from "../../../Types/adminTypes";
 
 const UserModal: React.FC<UserModalProps> = ({ user, onClose }) => {
   return (

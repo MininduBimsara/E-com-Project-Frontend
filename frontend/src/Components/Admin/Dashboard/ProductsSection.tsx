@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Package, Eye, Edit, Trash2, Star } from "lucide-react";
-import StatusBadge from "../components/StatusBadge";
-import ProductModal from "../modals/ProductModal";
-import { Product, SectionProps } from "../types/AdminTypes";
+import StatusBadge from "./StatusBadge";
+import ProductModal from "./ProductModal";
+import { type Product, type SectionProps } from "../../../Types/adminTypes";
 
 const ProductsSection: React.FC<SectionProps> = ({
   products = [],

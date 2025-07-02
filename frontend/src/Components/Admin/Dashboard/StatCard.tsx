@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { StatCardProps } from "../types/AdminTypes";
+import { type StatCardProps } from "../../../Types/adminTypes";
 
 const StatCard: React.FC<StatCardProps> = ({
   title,

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ShoppingCart, Eye, Edit, MoreVertical } from "lucide-react";
-import StatusBadge from "../components/StatusBadge";
-import { Order, SectionProps } from "../types/AdminTypes";
+import StatusBadge from "./StatusBadge";
+import { type Order, type SectionProps } from "../../../Types/adminTypes";
 
 const OrdersSection: React.FC<SectionProps> = ({ orders = [], setOrders }) => {
   const [searchTerm, setSearchTerm] = useState("");

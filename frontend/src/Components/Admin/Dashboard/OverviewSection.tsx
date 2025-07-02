@@ -10,8 +10,8 @@ import {
   BarChart3,
   Star,
 } from "lucide-react";
-import StatCard from "../components/StatCard";
-import { SectionProps, Activity } from "../types/AdminTypes";
+import StatCard from "./StatCard";
+import { type SectionProps, type Activity } from "../../../Types/adminTypes";
 
 const OverviewSection: React.FC<SectionProps> = ({
   stats,

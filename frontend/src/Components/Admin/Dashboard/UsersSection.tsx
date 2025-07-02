@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Eye, Edit, Trash2, Users } from "lucide-react";
-import StatusBadge from "../components/StatusBadge";
-import UserModal from "../modals/UserModal";
-import { User, SectionProps } from "../types/AdminTypes";
+import StatusBadge from "./StatusBadge";
+import UserModal from "./UserModal";
+import { type User, type SectionProps } from "../../../Types/adminTypes";
 
 const UsersSection: React.FC<SectionProps> = ({ users = [], setUsers }) => {
   const [searchTerm, setSearchTerm] = useState("");

@@ -1,5 +1,5 @@
 import React from "react";
-import { StatusBadgeProps } from "../types/AdminTypes";
+import { type StatusBadgeProps } from "../../../Types/adminTypes";
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const getStatusStyle = (status: string) => {
