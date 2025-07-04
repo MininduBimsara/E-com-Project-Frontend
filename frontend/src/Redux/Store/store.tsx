@@ -12,20 +12,26 @@ import {
 import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
 import userReducer from "../Slicers/authSlice";
 import productReducer from "../Slicers/productSlice";
+import adminReducer from "../Slicers/adminSlice";
+import cartReducer from "../Slicers/cartSlice"; // Added cart reducer
+import paymentReducer from "../Slicers/paymentSlice"; // Added payment reducer
 
 // Persist config
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user", "products"], // ✅ Fixed: "products" matches the reducer key
-  // We don't want to persist passwordReset state
-  blacklist: ["passwordReset"],
+  whitelist: ["user", "products", "admin", "cart"], // Added cart to persist, but not payment for security
+  // We don't want to persist passwordReset and payment state for security reasons
+  blacklist: ["passwordReset", "payment"],
 };
 
 // Root reducer
 const rootReducer = combineReducers({
   user: userReducer,
-  products: productReducer, // ✅ This key should match whitelist
+  products: productReducer,
+  admin: adminReducer,
+  cart: cartReducer, // Added cart reducer
+  payment: paymentReducer, // Added payment reducer
   // Add other reducers here as needed
 });
 
