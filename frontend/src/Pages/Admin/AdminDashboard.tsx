@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
 import {
   BarChart3,
   Users,
@@ -17,109 +18,90 @@ import OrdersSection from "../../Components/Admin/Dashboard/OrdersSection";
 import TabButton from "../../Components/Admin/Dashboard/TabButton";
 import QuickStats from "../../Components/Admin/Dashboard/QuickStats";
 
-// Types
+// Import thunks
 import {
-  type DashboardStats,
-  type User,
-  type Product,
-  type Order,
-} from "../../Types/adminTypes";
+  getDashboardStats,
+  getUsers,
+  getProducts,
+  getOrders,
+  verifyAdminAuth,
+} from "../../Store/Thunks/adminThunks";
+
+// Types
+import { type AppDispatch, type RootState } from "../../Store/store";
 
 const AdminDashboard: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const [activeTab, setActiveTab] = useState("overview");
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats>({
-    users: 0,
-    products: 0,
-    orders: 0,
-    revenue: 0,
-    status: {
-      userService: "unknown",
-      productService: "unknown",
-      orderService: "unknown",
-    },
-  });
-  const [users, setUsers] = useState<User[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
 
-  // Mock data loading - Replace with actual API calls
+  // Redux state
+  const { admin, dashboardStats, users, products, orders, loading, error } =
+    useSelector((state: RootState) => state.admin);
+
+  // Component loading states
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  // Load initial dashboard data
   useEffect(() => {
-    const loadDashboardData = async () => {
-      // Simulate API loading
-      setTimeout(() => {
-        setStats({
-          users: 1248,
-          products: 156,
-          orders: 324,
-          revenue: 45680,
-          status: {
-            userService: "available",
-            productService: "available",
-            orderService: "available",
-          },
-        });
+    const loadInitialData = async () => {
+      try {
+        // Verify admin authentication first
+        await dispatch(verifyAdminAuth()).unwrap();
 
-        // Load mock data (replace with actual API calls)
-        setUsers([
-          {
-            _id: "1",
-            username: "john_doe",
-            email: "john@example.com",
-            role: "customer",
-            status: "active",
-            createdAt: "2024-01-15T10:30:00Z",
-            lastLoginAt: "2024-01-30T15:45:00Z",
-            orders: 5,
-            totalSpent: 12500,
-          },
-          // Add more mock users...
+        // Load dashboard data
+        await Promise.all([
+          dispatch(getDashboardStats()),
+          dispatch(getUsers({ page: 1, limit: 50 })),
+          dispatch(getProducts({ page: 1, limit: 50 })),
+          dispatch(getOrders({ page: 1, limit: 50 })),
         ]);
-
-        setProducts([
-          {
-            _id: "1",
-            name: "Organic Cotton T-Shirt",
-            price: 2500,
-            category: "clothing",
-            stock: 45,
-            status: "active",
-            createdAt: "2024-01-10T10:00:00Z",
-            sold: 120,
-            rating: 4.8,
-          },
-          // Add more mock products...
-        ]);
-
-        setOrders([
-          {
-            _id: "1",
-            customer: "John Doe",
-            customerEmail: "john@example.com",
-            total: 5200,
-            status: "delivered",
-            createdAt: "2024-01-28T10:30:00Z",
-            items: 2,
-            paymentMethod: "Credit Card",
-            shippingAddress: "123 Main St, Colombo 01",
-          },
-          // Add more mock orders...
-        ]);
-
-        setLoading(false);
-      }, 1000);
+      } catch (error) {
+        console.error("Failed to load dashboard data:", error);
+        // Handle authentication error - redirect to login
+        window.location.href = "/admin/login";
+      } finally {
+        setInitialLoading(false);
+      }
     };
 
-    loadDashboardData();
-  }, []);
+    loadInitialData();
+  }, [dispatch]);
 
-  const handleRefresh = () => {
-    setLoading(true);
-    // Reload data
-    window.location.reload();
+  // Handle tab-specific data loading
+  useEffect(() => {
+    switch (activeTab) {
+      case "users":
+        if ((!users || users.data.length === 0) && !loading.users) {
+          dispatch(getUsers({ page: 1, limit: 50 }));
+        }
+        break;
+      case "products":
+        if ((!products || products.data.length === 0) && !loading.products) {
+          dispatch(getProducts({ page: 1, limit: 50 }));
+        }
+        break;
+      case "orders":
+        if ((!orders || orders.data.length === 0) && !loading.orders) {
+          dispatch(getOrders({ page: 1, limit: 50 }));
+        }
+        break;
+    }
+  }, [activeTab, dispatch, users, products, orders, loading]);
+
+  const handleRefresh = async () => {
+    try {
+      await Promise.all([
+        dispatch(getDashboardStats()),
+        dispatch(getUsers({ page: 1, limit: 50 })),
+        dispatch(getProducts({ page: 1, limit: 50 })),
+        dispatch(getOrders({ page: 1, limit: 50 })),
+      ]);
+    } catch (error) {
+      console.error("Failed to refresh dashboard data:", error);
+    }
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-25 to-teal-50 flex items-center justify-center">
         <motion.div className="text-center">
@@ -149,6 +131,11 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm text-gray-600 font-light tracking-wide">
                 HARITHA CEYLON MANAGEMENT
               </p>
+              {admin && (
+                <p className="text-xs text-gray-500">
+                  Welcome back, {admin.username}
+                </p>
+              )}
             </div>
 
             <div className="flex items-center space-x-4">
@@ -162,9 +149,14 @@ const AdminDashboard: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 onClick={handleRefresh}
-                className="p-2 text-gray-600 hover:text-green-700 transition-colors"
+                disabled={loading.dashboard}
+                className="p-2 text-gray-600 hover:text-green-700 transition-colors disabled:opacity-50"
               >
-                <RefreshCw className="w-5 h-5" />
+                <RefreshCw
+                  className={`w-5 h-5 ${
+                    loading.dashboard ? "animate-spin" : ""
+                  }`}
+                />
               </motion.button>
             </div>
           </div>
@@ -190,7 +182,7 @@ const AdminDashboard: React.FC = () => {
                   icon={Users}
                   isActive={activeTab === "users"}
                   onClick={() => setActiveTab("users")}
-                  count={stats.users}
+                  count={dashboardStats?.users || users?.data?.length || 0}
                 />
                 <TabButton
                   id="products"
@@ -198,7 +190,9 @@ const AdminDashboard: React.FC = () => {
                   icon={Package}
                   isActive={activeTab === "products"}
                   onClick={() => setActiveTab("products")}
-                  count={stats.products}
+                  count={
+                    dashboardStats?.products || products?.data?.length || 0
+                  }
                 />
                 <TabButton
                   id="orders"
@@ -206,46 +200,76 @@ const AdminDashboard: React.FC = () => {
                   icon={ShoppingCart}
                   isActive={activeTab === "orders"}
                   onClick={() => setActiveTab("orders")}
-                  count={stats.orders}
+                  count={dashboardStats?.orders || orders?.data?.length || 0}
                 />
               </div>
             </div>
 
             {/* Quick Stats */}
-            <QuickStats users={users} products={products} orders={orders} />
+            <QuickStats
+              users={users?.data || []}
+              products={products?.data || []}
+              orders={orders?.data || []}
+            />
           </div>
 
           {/* Main Content */}
           <div className="flex-1">
+            {/* Error Display */}
+            {(error.auth ||
+              error.dashboard ||
+              error.users ||
+              error.products ||
+              error.orders) && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
+              >
+                <p className="text-red-700 text-sm">
+                  Error:{" "}
+                  {error.auth ||
+                    error.dashboard ||
+                    error.users ||
+                    error.products ||
+                    error.orders}
+                </p>
+              </motion.div>
+            )}
+
             <AnimatePresence mode="wait">
               {activeTab === "overview" && (
                 <OverviewSection
                   key="overview"
-                  stats={stats}
-                  users={users}
-                  products={products}
-                  orders={orders}
+                  stats={dashboardStats}
+                  users={users?.data || []}
+                  products={products?.data || []}
+                  orders={orders?.data || []}
                   onNavigateToTab={setActiveTab}
                 />
               )}
 
               {activeTab === "users" && (
-                <UsersSection key="users" users={users} setUsers={setUsers} />
+                <UsersSection
+                  key="users"
+                  users={users?.data || []}
+                  loading={loading.users}
+                />
               )}
 
               {activeTab === "products" && (
                 <ProductsSection
                   key="products"
-                  products={products}
-                  setProducts={setProducts}
+                  products={products?.data || []}
+                  loading={loading.products}
                 />
               )}
 
               {activeTab === "orders" && (
                 <OrdersSection
                   key="orders"
-                  orders={orders}
-                  setOrders={setOrders}
+                  orders={orders?.data || []}
+                  loading={loading.orders}
                 />
               )}
             </AnimatePresence>
