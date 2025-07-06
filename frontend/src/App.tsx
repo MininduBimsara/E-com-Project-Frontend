@@ -14,6 +14,8 @@ import CheckoutPage from "./Pages/Common/CheckoutPage";
 import Header from "./Components/Common/NavBar";
 import ContactPage from "./Pages/Common/ContactPage";
 
+import AdminDashboard from "./Pages/Admin/AdminDashboard";
+
 function App() {
   return (
     <>
@@ -32,6 +34,7 @@ function App() {
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 {/* Add more routes as needed */}
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
               </Routes>
             </div>
 
