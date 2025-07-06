@@ -1,9 +1,9 @@
 // orderApi.tsx - Updated with correct Vite environment variables
 import axios from "axios";
 
-// Base URL using Vite environment variable - directly points to order API through gateway
+// Base URL using gateway service - according to documentation
 const API_BASE_URL =
-  import.meta.env.VITE_ORDER_API_URL || "http://localhost:4005/api/orders";
+  import.meta.env.VITE_ORDER_API_URL || "http://localhost:5000/api/orders";
 
 // Create axios instance with default config
 const orderApi = axios.create({
@@ -11,6 +11,7 @@ const orderApi = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Include cookies for authentication
 });
 
 // Add token to requests automatically
@@ -40,8 +41,8 @@ orderApi.interceptors.response.use(
 // ==========================================
 
 /**
- * Create a new order
- * Full URL: http://localhost:4005/api/orders/
+ * Create a new order (optional auth)
+ * Full URL: http://localhost:5000/api/orders/
  */
 export const createOrder = async (orderData: CreateOrderData) => {
   const response = await orderApi.post("/", orderData);
@@ -49,8 +50,8 @@ export const createOrder = async (orderData: CreateOrderData) => {
 };
 
 /**
- * Get order by ID
- * Full URL: http://localhost:4005/api/orders/{orderId}
+ * Get order by ID (requires auth)
+ * Full URL: http://localhost:5000/api/orders/{orderId}
  */
 export const getOrderById = async (orderId: string) => {
   const response = await orderApi.get(`/${orderId}`);
@@ -58,8 +59,8 @@ export const getOrderById = async (orderId: string) => {
 };
 
 /**
- * Get order by order number
- * Full URL: http://localhost:4005/api/orders/number/{orderNumber}
+ * Get order by order number (requires auth)
+ * Full URL: http://localhost:5000/api/orders/number/{orderNumber}
  */
 export const getOrderByNumber = async (orderNumber: string) => {
   const response = await orderApi.get(`/number/${orderNumber}`);
@@ -67,8 +68,8 @@ export const getOrderByNumber = async (orderNumber: string) => {
 };
 
 /**
- * Get user's orders
- * Full URL: http://localhost:4005/api/orders/user/{userId}
+ * Get user's orders (requires auth)
+ * Full URL: http://localhost:5000/api/orders/user/{userId}
  */
 export const getUserOrders = async (
   userId: string,
@@ -90,11 +91,11 @@ export const getUserOrders = async (
 };
 
 /**
- * Cancel order
- * Full URL: http://localhost:4005/api/orders/{orderId}/cancel
+ * Cancel order (requires auth)
+ * Full URL: http://localhost:5000/api/orders/{orderId}/cancel
  */
 export const cancelOrder = async (orderId: string) => {
-  const response = await orderApi.patch(`/${orderId}/cancel`);
+  const response = await orderApi.put(`/${orderId}/cancel`);
   return response.data;
 };
 
@@ -104,7 +105,7 @@ export const cancelOrder = async (orderId: string) => {
 
 /**
  * Get all orders (Admin only)
- * Full URL: http://localhost:4005/api/orders/admin/all
+ * Full URL: http://localhost:5000/api/orders/admin
  */
 export const getAllOrders = async (options?: AdminOrderQueryOptions) => {
   const params = new URLSearchParams();
@@ -117,21 +118,21 @@ export const getAllOrders = async (options?: AdminOrderQueryOptions) => {
   }
 
   const response = await orderApi.get(
-    `/admin/all${params.toString() ? `?${params.toString()}` : ""}`
+    `/admin${params.toString() ? `?${params.toString()}` : ""}`
   );
   return response.data;
 };
 
 /**
  * Update order status (Admin only)
- * Full URL: http://localhost:4005/api/orders/admin/{orderId}/status
+ * Full URL: http://localhost:5000/api/orders/admin/{orderId}/status
  */
 export const updateOrderStatus = async (
   orderId: string,
   status: OrderStatus,
   statusNote?: string
 ) => {
-  const response = await orderApi.patch(`/admin/${orderId}/status`, {
+  const response = await orderApi.put(`/admin/${orderId}/status`, {
     status,
     statusNote,
   });
@@ -139,20 +140,22 @@ export const updateOrderStatus = async (
 };
 
 /**
- * Get order statistics (Admin only)
- * Full URL: http://localhost:4005/api/orders/admin/statistics
+ * Get orders by payment status (Admin only)
+ * Full URL: http://localhost:5000/api/orders/admin/payment-status/{paymentStatus}
  */
-export const getOrderStatistics = async (
-  timeframe?: string,
-  groupBy?: string
+export const getOrdersByPaymentStatus = async (
+  paymentStatus: PaymentStatus
 ) => {
-  const params = new URLSearchParams();
-  if (timeframe) params.append("timeframe", timeframe);
-  if (groupBy) params.append("groupBy", groupBy);
+  const response = await orderApi.get(`/admin/payment-status/${paymentStatus}`);
+  return response.data;
+};
 
-  const response = await orderApi.get(
-    `/admin/statistics${params.toString() ? `?${params.toString()}` : ""}`
-  );
+/**
+ * Get order statistics (Admin only)
+ * Full URL: http://localhost:5000/api/orders/admin/statistics
+ */
+export const getOrderStatistics = async () => {
+  const response = await orderApi.get("/admin/statistics");
   return response.data;
 };
 
@@ -221,9 +224,9 @@ export interface Order {
 }
 
 export interface CreateOrderData {
-  userId: string;
+  items: OrderItem[];
   shippingAddress: ShippingAddress;
-  paymentId?: string;
+  paymentMethod: string;
 }
 
 export interface OrderQueryOptions {

@@ -10,7 +10,7 @@ export interface RegisterUserData {
   username: string;
   email: string;
   password: string;
-  role?: string;
+  profileImage?: File;
 }
 
 export interface User {
@@ -21,7 +21,9 @@ export interface User {
   // Add other user fields as needed
 }
 
-const API_URL = `${import.meta.env.VITE_USER_API_URL}/api/auth`;
+// Base URL using gateway service - according to documentation
+const API_URL =
+  import.meta.env.VITE_AUTH_API_URL || "http://localhost:5000/api/auth";
 
 // Create axios instance with default config
 const authApiClient: AxiosInstance = axios.create({
@@ -34,19 +36,6 @@ const authApiClient: AxiosInstance = axios.create({
 
 // Auth API functions
 export const authApi = {
-  // User login
-  login: async (credentials: Credentials): Promise<User> => {
-    try {
-      const response: AxiosResponse<{ user: User }> = await authApiClient.post("/login", {
-        email: credentials.email,
-        password: credentials.password,
-      });
-      return response.data.user;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Login failed");
-    }
-  },
-
   // User registration
   register: async (userData: RegisterUserData | FormData): Promise<User> => {
     try {
@@ -60,18 +49,33 @@ export const authApi = {
           },
         });
       } else {
-        // For backward compatibility or when no file is uploaded
+        // For data without file upload
         response = await authApiClient.post("/register", {
           username: userData.username,
           email: userData.email,
           password: userData.password,
-          role: userData.role || "user", // Default to 'user' if not provided
         });
       }
 
       return response.data.user;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Registration failed");
+    }
+  },
+
+  // User login
+  login: async (credentials: Credentials): Promise<User> => {
+    try {
+      const response: AxiosResponse<{ user: User }> = await authApiClient.post(
+        "/login",
+        {
+          email: credentials.email,
+          password: credentials.password,
+        }
+      );
+      return response.data.user;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Login failed");
     }
   },
 
@@ -89,9 +93,12 @@ export const authApi = {
   // Verify authentication status
   verifyAuth: async (): Promise<User> => {
     try {
-      const response: AxiosResponse<{ user?: User }> = await authApiClient.get("/verify", {
-        withCredentials: true,
-      });
+      const response: AxiosResponse<{ user?: User }> = await authApiClient.get(
+        "/verify",
+        {
+          withCredentials: true,
+        }
+      );
 
       if (response.data.user) {
         return response.data.user;

@@ -75,7 +75,9 @@ export interface ApiResponse<T = any> {
   data?: T;
 }
 
-const API_URL = `${import.meta.env.VITE_ADMIN_API_URL}/api/admin`;
+// Base URL using gateway service - according to documentation
+const API_URL =
+  import.meta.env.VITE_ADMIN_API_URL || "http://localhost:5000/api/admin";
 
 // Create axios instance with default config
 const adminApiClient: AxiosInstance = axios.create({
@@ -177,6 +179,26 @@ export const adminApi = {
     }
   },
 
+  // Update user status
+  updateUserStatus: async (userId: string, status: string): Promise<User> => {
+    try {
+      const response: AxiosResponse<ApiResponse<User>> =
+        await adminApiClient.put(`/users/${userId}/status`, { status });
+
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      } else {
+        throw new Error(
+          response.data.message || "Failed to update user status"
+        );
+      }
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update user status"
+      );
+    }
+  },
+
   // Get all products
   getProducts: async (
     page: number = 1,
@@ -245,26 +267,6 @@ export const adminApi = {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || "Failed to update order status"
-      );
-    }
-  },
-
-  // Update user status
-  updateUserStatus: async (userId: string, status: string): Promise<User> => {
-    try {
-      const response: AxiosResponse<ApiResponse<User>> =
-        await adminApiClient.put(`/users/${userId}/status`, { status });
-
-      if (response.data.success && response.data.data) {
-        return response.data.data;
-      } else {
-        throw new Error(
-          response.data.message || "Failed to update user status"
-        );
-      }
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Failed to update user status"
       );
     }
   },

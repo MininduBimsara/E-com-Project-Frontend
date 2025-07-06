@@ -6,9 +6,9 @@ import StatusBadge from "./StatusBadge";
 import {
   getOrders,
   updateOrderStatus,
-} from "../../../Store/Thunks/adminThunks";
+} from "../../../Redux/Thunks/adminThunks";
 import { type Order } from "../../../Api/Admin/adminApi";
-import { type AppDispatch, type RootState } from "../../../Store/store";
+import { type AppDispatch, type RootState } from "../../../Redux/Store/store";
 
 interface OrdersSectionProps {
   orders: Order[];

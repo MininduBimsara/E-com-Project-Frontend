@@ -1,9 +1,9 @@
 // paymentApi.tsx - API functions for payment operations
 import axios from "axios";
 
-// Base URL using Vite environment variable - directly points to payment API through gateway
+// Base URL using gateway service - according to documentation
 const API_BASE_URL =
-  import.meta.env.VITE_PAYMENT_API_URL || "http://localhost:4004";
+  import.meta.env.VITE_PAYMENT_API_URL || "http://localhost:5000/api/payments";
 
 // Create axios instance with default config
 const paymentApi = axios.create({
@@ -41,7 +41,8 @@ paymentApi.interceptors.response.use(
 // ==========================================
 
 /**
- * Create PayPal Order
+ * Create PayPal Order (requires auth)
+ * Full URL: http://localhost:5000/api/payments/paypal/create-order
  */
 export const createPayPalOrder = async (orderId: string, amount: number) => {
   const response = await paymentApi.post("/paypal/create-order", {
@@ -52,7 +53,8 @@ export const createPayPalOrder = async (orderId: string, amount: number) => {
 };
 
 /**
- * Capture PayPal Payment
+ * Capture PayPal Payment (requires auth)
+ * Full URL: http://localhost:5000/api/payments/paypal/capture-order
  */
 export const capturePayPalOrder = async (
   orderId: string,
@@ -66,7 +68,8 @@ export const capturePayPalOrder = async (
 };
 
 /**
- * Get Payment History
+ * Get Payment History (requires auth)
+ * Full URL: http://localhost:5000/api/payments/history
  */
 export const getPaymentHistory = async () => {
   const response = await paymentApi.get("/history");
@@ -74,7 +77,8 @@ export const getPaymentHistory = async () => {
 };
 
 /**
- * Get Payment Details by Transaction ID
+ * Get Payment Details by Transaction ID (requires auth)
+ * Full URL: http://localhost:5000/api/payments/{transactionId}
  */
 export const getPaymentDetails = async (transactionId: string) => {
   const response = await paymentApi.get(`/${transactionId}`);

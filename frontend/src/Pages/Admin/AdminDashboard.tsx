@@ -25,10 +25,10 @@ import {
   getProducts,
   getOrders,
   verifyAdminAuth,
-} from "../../Store/Thunks/adminThunks";
+} from "../../Redux/Thunks/adminThunks";
 
 // Types
-import { type AppDispatch, type RootState } from "../../Store/store";
+import { type AppDispatch, type RootState } from "../../Redux/Store/store";
 
 const AdminDashboard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();

@@ -26,6 +26,7 @@ export interface CreateProductData {
   carbonFootprint?: number;
   category: "Kitchen" | "Accessories" | "Cloths";
   stock?: number;
+  productImage?: File;
 }
 
 export interface UpdateProductData {
@@ -36,6 +37,7 @@ export interface UpdateProductData {
   carbonFootprint?: number;
   category?: "Kitchen" | "Accessories" | "Cloths";
   stock?: number;
+  productImage?: File;
 }
 
 export interface ProductFilters {
@@ -51,9 +53,9 @@ export interface SearchFilters extends ProductFilters {
   q?: string;
 }
 
-// Base URL using Vite environment variable - directly points to product API through gateway
+// Base URL using gateway service - according to documentation
 const API_URL =
-  import.meta.env.VITE_PRODUCT_API_URL || "http://localhost:4005/api/products";
+  import.meta.env.VITE_PRODUCT_API_URL || "http://localhost:5000/api/products";
 
 // Create axios instance with default config
 const productApiClient: AxiosInstance = axios.create({
@@ -89,7 +91,7 @@ productApiClient.interceptors.response.use(
 // Product API functions
 export const productApi = {
   // Get all public products (no auth required)
-  // Full URL: http://localhost:4005/api/products/public
+  // Full URL: http://localhost:5000/api/products/public
   getPublicProducts: async (filters?: ProductFilters): Promise<Product[]> => {
     try {
       const params = new URLSearchParams();
@@ -113,7 +115,7 @@ export const productApi = {
   },
 
   // Get all products (optional auth)
-  // Full URL: http://localhost:4005/api/products/
+  // Full URL: http://localhost:5000/api/products/
   getProducts: async (filters?: ProductFilters): Promise<Product[]> => {
     try {
       const params = new URLSearchParams();
@@ -137,7 +139,7 @@ export const productApi = {
   },
 
   // Get product by ID (requires auth)
-  // Full URL: http://localhost:4005/api/products/details/{productId}
+  // Full URL: http://localhost:5000/api/products/details/{productId}
   getProductById: async (productId: string): Promise<Product> => {
     try {
       const response: AxiosResponse<Product> = await productApiClient.get(
@@ -152,7 +154,7 @@ export const productApi = {
   },
 
   // Create product (requires auth)
-  // Full URL: http://localhost:4005/api/products/
+  // Full URL: http://localhost:5000/api/products/
   createProduct: async (
     productData: CreateProductData | FormData
   ): Promise<Product> => {
@@ -180,7 +182,7 @@ export const productApi = {
   },
 
   // Update product (requires auth)
-  // Full URL: http://localhost:4005/api/products/{productId}
+  // Full URL: http://localhost:5000/api/products/{productId}
   updateProduct: async (
     productId: string,
     updateData: UpdateProductData | FormData
@@ -209,7 +211,7 @@ export const productApi = {
   },
 
   // Delete product (requires auth)
-  // Full URL: http://localhost:4005/api/products/{productId}
+  // Full URL: http://localhost:5000/api/products/{productId}
   deleteProduct: async (productId: string): Promise<{ message: string }> => {
     try {
       const response: AxiosResponse<{ message: string }> =
@@ -223,7 +225,7 @@ export const productApi = {
   },
 
   // Get products by category
-  // Full URL: http://localhost:4005/api/products/category/{category}
+  // Full URL: http://localhost:5000/api/products/category/{category}
   getProductsByCategory: async (
     category: string,
     options?: { limit?: number; skip?: number }
@@ -252,7 +254,7 @@ export const productApi = {
   },
 
   // Search products
-  // Full URL: http://localhost:4005/api/products/search
+  // Full URL: http://localhost:5000/api/products/search
   searchProducts: async (
     searchQuery: string,
     filters?: SearchFilters
@@ -281,7 +283,7 @@ export const productApi = {
   },
 
   // Get featured products
-  // Full URL: http://localhost:4005/api/products/featured
+  // Full URL: http://localhost:5000/api/products/featured
   getFeaturedProducts: async (limit?: number): Promise<Product[]> => {
     try {
       const params = limit ? `?limit=${limit}` : "";
@@ -297,7 +299,7 @@ export const productApi = {
   },
 
   // Get user's products (requires auth)
-  // Full URL: http://localhost:4005/api/products/my
+  // Full URL: http://localhost:5000/api/products/my
   getUserProducts: async (): Promise<Product[]> => {
     try {
       const response: AxiosResponse<Product[]> = await productApiClient.get(
@@ -312,14 +314,14 @@ export const productApi = {
   },
 
   // Update product stock (requires auth)
-  // Full URL: http://localhost:4005/api/products/{productId}/stock
+  // Full URL: http://localhost:5000/api/products/{productId}/stock
   updateProductStock: async (
     productId: string,
-    quantity: number
+    stock: number
   ): Promise<Product> => {
     try {
       const response: AxiosResponse<{ product: Product }> =
-        await productApiClient.patch(`/${productId}/stock`, { quantity });
+        await productApiClient.patch(`/${productId}/stock`, { stock });
       return response.data.product;
     } catch (error: any) {
       throw new Error(
@@ -329,7 +331,7 @@ export const productApi = {
   },
 
   // Test API connection
-  // Full URL: http://localhost:4005/api/products/test
+  // Full URL: http://localhost:5000/api/products/test
   testConnection: async (): Promise<{ message: string }> => {
     try {
       const response: AxiosResponse<{ message: string }> =
