@@ -15,12 +15,13 @@ import productReducer from "../Slicers/productSlice";
 import adminReducer from "../Slicers/adminSlice";
 import cartReducer from "../Slicers/cartSlice"; // Added cart reducer
 import paymentReducer from "../Slicers/paymentSlice"; // Added payment reducer
+import googleAuthReducer from "../Slicers/googleAuthSlice"; // Added Google auth reducer
 
 // Persist config
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user", "products", "admin", "cart"], // Added cart to persist, but not payment for security
+  whitelist: ["user", "products", "admin", "cart", "googleAuth"], // Added cart and googleAuth to persist, but not payment for security
   // We don't want to persist passwordReset and payment state for security reasons
   blacklist: ["passwordReset", "payment"],
 };
@@ -32,6 +33,7 @@ const rootReducer = combineReducers({
   admin: adminReducer,
   cart: cartReducer, // Added cart reducer
   payment: paymentReducer, // Added payment reducer
+  googleAuth: googleAuthReducer, // Added Google auth reducer
   // Add other reducers here as needed
 });
 
