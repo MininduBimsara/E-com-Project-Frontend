@@ -16,6 +16,7 @@ import adminReducer from "../Slicers/adminSlice";
 import cartReducer from "../Slicers/cartSlice"; // Added cart reducer
 import paymentReducer from "../Slicers/paymentSlice"; // Added payment reducer
 import googleAuthReducer from "../Slicers/googleAuthSlice"; // Added Google auth reducer
+import orderReducer from "../Slicers/orderSlice";
 
 // Persist config
 const persistConfig = {
@@ -34,6 +35,7 @@ const rootReducer = combineReducers({
   cart: cartReducer, // Added cart reducer
   payment: paymentReducer, // Added payment reducer
   googleAuth: googleAuthReducer, // Added Google auth reducer
+  orders: orderReducer, // Added orders reducer
   // Add other reducers here as needed
 });
 
