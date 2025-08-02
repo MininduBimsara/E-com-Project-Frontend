@@ -50,14 +50,14 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // Reset state when product changes
   React.useEffect(() => {
     if (product) {
       setActiveImageIndex(0);
       setQuantity(1);
-      setImageError(false);
+      setImageErrors(new Set());
     }
   }, [product]);
 
@@ -65,32 +65,49 @@ const ProductModal: React.FC<ProductModalProps> = ({
     setQuantity((prev) => Math.max(1, prev + change));
   };
 
-  const getImageSrc = (imageFilename: string, category?: string) => {
-    if (imageError || !imageFilename) {
-      // Fallback images based on category
-      switch (category?.toLowerCase()) {
-        case "cloths":
-        case "clothing":
-          return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-        case "kitchen":
-          return "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-        case "accessories":
-          return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-        default:
-          return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-      }
-    }
-
-    // If it's already a full URL (from transformed product), use as is
-    if (imageFilename.startsWith("http")) {
-      return imageFilename;
-    }
-
-    // Otherwise, construct URL from filename
-    return `${
-      import.meta.env.VITE_PRODUCT_API_URL
-    }/product-images/${imageFilename}`;
+  const handleImageError = (imageUrl: string) => {
+    setImageErrors((prev) => new Set([...prev, imageUrl]));
   };
+
+  const getFallbackImage = (category?: string) => {
+    switch (category?.toLowerCase()) {
+      case "cloths":
+      case "clothing":
+        return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+      case "kitchen":
+        return "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+      case "accessories":
+        return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+      default:
+        return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+    }
+  };
+
+const getImageSrc = (
+  imageFilename: string | null | undefined,
+  category?: string
+) => {
+  const imageKey = `${product?.id}-${imageFilename}`;
+
+  if (imageErrors.has(imageKey)) {
+    return getFallbackImage(category);
+  }
+
+  if (!imageFilename || typeof imageFilename !== "string") {
+    return getFallbackImage(category);
+  }
+
+  // If it's already a full URL (Unsplash fallback), use as is
+  if (imageFilename.startsWith("http")) {
+    return imageFilename;
+  }
+
+  const cleanFilename = imageFilename.split("/").pop() || imageFilename;
+  const gatewayUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  return `${gatewayUrl}/api/products/product-images/${cleanFilename}`;
+};
+
+
 
   const modalVariants = {
     hidden: {
@@ -160,6 +177,12 @@ const ProductModal: React.FC<ProductModalProps> = ({
   // No product state
   if (!product) return null;
 
+  // Get the current image to display
+  const currentImage =
+    product.images && product.images.length > 0
+      ? product.images[activeImageIndex]
+      : null;
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -174,7 +197,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             onClick={onClose}
           />
 
-          {/* Modal Content - FIXED: Added proper max-height and flex behavior */}
+          {/* Modal Content */}
           <motion.div
             variants={modalVariants}
             initial="hidden"
@@ -190,18 +213,18 @@ const ProductModal: React.FC<ProductModalProps> = ({
               <X className="w-6 h-6" />
             </button>
 
-            {/* Image Section - FIXED: Responsive height */}
+            {/* Image Section */}
             <div className="lg:w-1/2 relative min-h-[300px] lg:min-h-full">
               {/* Main Image */}
               <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50">
                 <img
-                  src={getImageSrc(
-                    product.images[activeImageIndex],
-                    product.category
-                  )}
+                  src={getImageSrc(currentImage || "", product.category)}
                   alt={product.name}
                   className="w-full h-full object-cover"
-                  onError={() => setImageError(true)}
+                  onError={() =>
+                    handleImageError(`${product.id}-${currentImage}`)
+                  }
+                  crossOrigin="anonymous"
                 />
 
                 {/* Badges */}
@@ -242,7 +265,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </div>
 
                 {/* Image Thumbnails */}
-                {product.images.length > 1 && (
+                {product.images && product.images.length > 1 && (
                   <div className="absolute bottom-6 right-6 flex gap-2">
                     {product.images.map((image, index) => (
                       <button
@@ -258,7 +281,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
                           src={getImageSrc(image, product.category)}
                           alt={`${product.name} ${index + 1}`}
                           className="w-full h-full object-cover"
-                          onError={() => setImageError(true)}
+                          onError={() =>
+                            handleImageError(`${product.id}-${image}`)
+                          }
+                          crossOrigin="anonymous"
                         />
                       </button>
                     ))}
@@ -267,7 +293,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </div>
             </div>
 
-            {/* Content Section - FIXED: Proper scrolling */}
+            {/* Content Section */}
             <div className="lg:w-1/2 flex flex-col min-h-0">
               <div className="flex-1 overflow-y-auto">
                 <div className="p-6 lg:p-8">
@@ -372,7 +398,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 </div>
               </div>
 
-              {/* Fixed Bottom Section - Quantity & Actions */}
+              {/* Fixed Bottom Section */}
               <div className="border-t border-gray-100 bg-white p-6 lg:p-8">
                 <div className="space-y-4">
                   {/* Quantity Selector */}
