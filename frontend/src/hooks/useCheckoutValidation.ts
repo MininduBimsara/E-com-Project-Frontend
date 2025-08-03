@@ -9,6 +9,7 @@ export const useCheckoutValidation = () => {
     const newErrors: { [key: string]: string } = {};
 
     if (step === 1) {
+      // Shipping Information Validation
       if (!formData.firstName.trim())
         newErrors.firstName = "First name is required";
       if (!formData.lastName.trim())
@@ -20,16 +21,22 @@ export const useCheckoutValidation = () => {
       if (!formData.postalCode.trim())
         newErrors.postalCode = "Postal code is required";
       if (!formData.province) newErrors.province = "Province is required";
+      if (!formData.shippingMethod)
+        newErrors.shippingMethod = "Please select a shipping method";
     }
 
     if (step === 2) {
-      if (!formData.cardNumber.trim())
-        newErrors.cardNumber = "Card number is required";
-      if (!formData.expiryDate.trim())
-        newErrors.expiryDate = "Expiry date is required";
-      if (!formData.cvv.trim()) newErrors.cvv = "CVV is required";
-      if (!formData.cardName.trim())
-        newErrors.cardName = "Cardholder name is required";
+      // Payment step - No validation needed for PayPal
+      // PayPal handles its own validation during the checkout process
+      // We only need to ensure shipping info is still valid
+      if (
+        !formData.firstName.trim() ||
+        !formData.lastName.trim() ||
+        !formData.email.trim() ||
+        !formData.address.trim()
+      ) {
+        newErrors.general = "Please complete the shipping information first";
+      }
     }
 
     setErrors(newErrors);

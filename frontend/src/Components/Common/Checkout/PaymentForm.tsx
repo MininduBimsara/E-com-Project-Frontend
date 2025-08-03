@@ -1,14 +1,11 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  CreditCard,
-  Calendar,
-  Lock,
-  User,
   Shield,
   Loader2,
   CheckCircle,
   AlertCircle,
+  CreditCard,
 } from "lucide-react";
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import { useDispatch, useSelector } from "react-redux";
@@ -54,7 +51,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const { loading: paymentLoading } = useSelector(
     (state: RootState) => state.payment
   );
-  // Fix: Use correct selector for orders slice (key is 'orders')
   const { loading: orderLoading } = useSelector(
     (state: RootState) => state.orders
   );
@@ -80,11 +76,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       const orderData = {
         items: mapCartItemsToOrderItems(),
         shippingAddress: {
-          street: formData.address, // assuming 'address' is the street
+          street: formData.address,
           city: formData.city,
-          state: formData.province, // assuming 'province' is used as 'state'
+          state: formData.province,
           zipCode: formData.postalCode,
-          country: "US", // or use a field if available
+          country: "LK", // Sri Lanka
         },
         paymentMethod: "paypal",
       };
@@ -135,6 +131,17 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     }
   };
 
+  const handlePayPalError = (error: any) => {
+    console.error("PayPal Error:", error);
+    setPaypalError("PayPal payment failed. Please try again.");
+    setPaypalStatus("error");
+  };
+
+  const handlePayPalCancel = () => {
+    setPaypalStatus("idle");
+    setPaypalError("");
+  };
+
   const stepVariants = {
     hidden: { opacity: 0, x: 20 },
     visible: { opacity: 1, x: 0 },
@@ -156,117 +163,111 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         Payment Information
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="md:col-span-2">
-          <label className="block text-sm font-light text-gray-700 mb-2 tracking-wide">
-            Card Number *
-          </label>
-          <div className="relative">
-            <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={formData.cardNumber}
-              onChange={(e) => onInputChange("cardNumber", e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 border rounded-xl font-light focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 ${
-                errors.cardNumber
-                  ? "border-red-300 bg-red-50/30"
-                  : "border-gray-200 bg-white/50"
-              }`}
-              placeholder="1234 5678 9012 3456"
-            />
+      {/* PayPal Status Messages */}
+      {paypalStatus !== "idle" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`mb-6 p-4 rounded-xl border ${
+            paypalStatus === "success"
+              ? "bg-green-50 border-green-200 text-green-700"
+              : paypalStatus === "error"
+              ? "bg-red-50 border-red-200 text-red-700"
+              : "bg-blue-50 border-blue-200 text-blue-700"
+          }`}
+        >
+          <div className="flex items-center space-x-2">
+            {paypalStatus === "processing" && (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            )}
+            {paypalStatus === "success" && <CheckCircle className="w-5 h-5" />}
+            {paypalStatus === "error" && <AlertCircle className="w-5 h-5" />}
+            <span className="font-light">
+              {paypalStatus === "processing" && "Processing PayPal payment..."}
+              {paypalStatus === "success" && "PayPal payment successful!"}
+              {paypalStatus === "error" && paypalError}
+            </span>
           </div>
-          {errors.cardNumber && (
-            <p className="text-red-500 text-xs mt-1 font-light">
-              {errors.cardNumber}
-            </p>
-          )}
+        </motion.div>
+      )}
+
+      {/* PayPal Payment Section */}
+      <div className="space-y-6">
+        <div className="text-center">
+          <h3 className="text-lg font-light text-gray-800 mb-2">
+            Complete your payment with PayPal
+          </h3>
+          <p className="text-sm font-light text-gray-600 mb-6">
+            Secure checkout powered by PayPal. You can pay with your PayPal
+            account or credit/debit card.
+          </p>
         </div>
 
-        <div>
-          <label className="block text-sm font-light text-gray-700 mb-2 tracking-wide">
-            Expiry Date *
-          </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={formData.expiryDate}
-              onChange={(e) => onInputChange("expiryDate", e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 border rounded-xl font-light focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 ${
-                errors.expiryDate
-                  ? "border-red-300 bg-red-50/30"
-                  : "border-gray-200 bg-white/50"
-              }`}
-              placeholder="MM/YY"
+        {/* PayPal Buttons */}
+        {totalPrice > 0 && (
+          <div className="max-w-md mx-auto">
+            <PayPalButtons
+              createOrder={handleCreatePayPalOrder}
+              onApprove={handleApprovePayPal}
+              onError={handlePayPalError}
+              onCancel={handlePayPalCancel}
+              disabled={isLoading || paypalStatus === "processing"}
+              style={{
+                layout: "vertical",
+                color: "blue",
+                shape: "rect",
+                label: "pay",
+                height: 50,
+              }}
             />
           </div>
-          {errors.expiryDate && (
-            <p className="text-red-500 text-xs mt-1 font-light">
-              {errors.expiryDate}
-            </p>
-          )}
+        )}
+
+        {/* Security Notice */}
+        <div className="mt-8 p-4 bg-green-50/80 border border-green-100 rounded-xl">
+          <div className="flex items-center justify-center text-green-700">
+            <Shield className="w-5 h-5 mr-2" />
+            <span className="text-sm font-light">
+              Your payment is secured with PayPal's advanced encryption and
+              fraud protection
+            </span>
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-light text-gray-700 mb-2 tracking-wide">
-            CVV *
-          </label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={formData.cvv}
-              onChange={(e) => onInputChange("cvv", e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 border rounded-xl font-light focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 ${
-                errors.cvv
-                  ? "border-red-300 bg-red-50/30"
-                  : "border-gray-200 bg-white/50"
-              }`}
-              placeholder="123"
-            />
-          </div>
-          {errors.cvv && (
-            <p className="text-red-500 text-xs mt-1 font-light">{errors.cvv}</p>
-          )}
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-sm font-light text-gray-700 mb-2 tracking-wide">
-            Cardholder Name *
-          </label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={formData.cardName}
-              onChange={(e) => onInputChange("cardName", e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 border rounded-xl font-light focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 ${
-                errors.cardName
-                  ? "border-red-300 bg-red-50/30"
-                  : "border-gray-200 bg-white/50"
-              }`}
-              placeholder="Name as it appears on card"
-            />
-          </div>
-          {errors.cardName && (
-            <p className="text-red-500 text-xs mt-1 font-light">
-              {errors.cardName}
+        {/* Payment Features */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className="text-center p-4">
+            <Shield className="w-8 h-8 mx-auto text-green-600 mb-2" />
+            <h4 className="text-sm font-light text-gray-800 mb-1">
+              Secure Payment
+            </h4>
+            <p className="text-xs text-gray-600 font-light">
+              256-bit SSL encryption
             </p>
-          )}
+          </div>
+          <div className="text-center p-4">
+            <CheckCircle className="w-8 h-8 mx-auto text-green-600 mb-2" />
+            <h4 className="text-sm font-light text-gray-800 mb-1">
+              Buyer Protection
+            </h4>
+            <p className="text-xs text-gray-600 font-light">
+              PayPal purchase protection
+            </p>
+          </div>
+          <div className="text-center p-4">
+            <CreditCard className="w-8 h-8 mx-auto text-green-600 mb-2" />
+            <h4 className="text-sm font-light text-gray-800 mb-1">
+              Multiple Options
+            </h4>
+            <p className="text-xs text-gray-600 font-light">
+              PayPal or card payment
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Security Notice */}
-      <div className="mt-6 p-4 bg-green-50/80 border border-green-100 rounded-xl">
-        <div className="flex items-center text-green-700">
-          <Shield className="w-5 h-5 mr-2" />
-          <span className="text-sm font-light">
-            Your payment information is secured with 256-bit SSL encryption
-          </span>
-        </div>
-      </div>
-
-      <div className="flex justify-between mt-8">
+      {/* Navigation Buttons */}
+      <div className="flex justify-between mt-12 pt-6 border-t border-gray-100">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -276,81 +277,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           Back to Shipping
         </motion.button>
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onSubmit}
-          disabled={isLoading}
-          className="bg-green-600 text-white px-8 py-3 font-light tracking-[0.1em] text-sm hover:bg-green-700 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-        >
-          {isLoading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-              Processing...
-            </>
-          ) : (
-            "Complete Order"
-          )}
-        </motion.button>
-      </div>
-
-      {/* PayPal Button below card fields */}
-      {totalPrice > 0 && (
-        <div className="mt-10">
-          <h3 className="text-lg font-light text-gray-800 mb-2">
-            Or pay with PayPal
-          </h3>
-          {paypalStatus !== "idle" && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`mb-6 p-4 rounded-xl border ${
-                paypalStatus === "success"
-                  ? "bg-green-50 border-green-200 text-green-700"
-                  : paypalStatus === "error"
-                  ? "bg-red-50 border-red-200 text-red-700"
-                  : "bg-blue-50 border-blue-200 text-blue-700"
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                {paypalStatus === "processing" && (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                )}
-                {paypalStatus === "success" && (
-                  <CheckCircle className="w-5 h-5" />
-                )}
-                {paypalStatus === "error" && (
-                  <AlertCircle className="w-5 h-5" />
-                )}
-                <span className="font-light">
-                  {paypalStatus === "processing" &&
-                    "Processing PayPal payment..."}
-                  {paypalStatus === "success" && "PayPal payment successful!"}
-                  {paypalStatus === "error" && paypalError}
-                </span>
-              </div>
-            </motion.div>
-          )}
-          <PayPalButtons
-            createOrder={handleCreatePayPalOrder}
-            onApprove={handleApprovePayPal}
-            onError={() => {
-              setPaypalError("PayPal payment failed");
-              setPaypalStatus("error");
-            }}
-            onCancel={() => {
-              setPaypalStatus("idle");
-              setPaypalError("");
-            }}
-            style={{
-              layout: "vertical",
-              color: "blue",
-              shape: "rect",
-              label: "pay",
-            }}
-          />
+        <div className="text-sm font-light text-gray-600 flex items-center">
+          Complete payment using PayPal button above
         </div>
-      )}
+      </div>
     </motion.div>
   );
 };

@@ -13,15 +13,9 @@ const initialFormData: FormData = {
   postalCode: "",
   province: "",
 
-  // Payment Information
-  cardNumber: "",
-  expiryDate: "",
-  cvv: "",
-  cardName: "",
-
   // Options
   shippingMethod: "standard",
-  paymentMethod: "card",
+  paymentMethod: "paypal", // Always PayPal now
   saveInfo: false,
   marketing: false,
 };

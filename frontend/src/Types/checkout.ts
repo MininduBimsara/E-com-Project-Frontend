@@ -1,3 +1,4 @@
+// Types/checkout.ts
 export interface FormData {
   // Shipping Information
   firstName: string;
@@ -9,15 +10,9 @@ export interface FormData {
   postalCode: string;
   province: string;
 
-  // Payment Information
-  cardNumber: string;
-  expiryDate: string;
-  cvv: string;
-  cardName: string;
-
   // Options
   shippingMethod: string;
-  paymentMethod: string;
+  paymentMethod: string; // Will always be 'paypal' now
   saveInfo: boolean;
   marketing: boolean;
 }
@@ -44,4 +39,5 @@ export interface OrderData {
   shippingMethod: string;
   carbonFootprint: number;
   date: string;
+  paymentMethod: "paypal";
 }
