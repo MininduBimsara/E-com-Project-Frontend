@@ -1,5 +1,5 @@
 // productApi.tsx - Updated with correct Vite environment variables
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import { createAxiosInstance, type AxiosResponse } from "../axiosConfig";
 
 // Product interfaces
 export interface Product {
@@ -57,36 +57,8 @@ export interface SearchFilters extends ProductFilters {
 const API_URL =
   import.meta.env.VITE_PRODUCT_API_URL || "http://localhost:5000/api/products";
 
-// Create axios instance with default config
-const productApiClient: AxiosInstance = axios.create({
-  baseURL: API_URL, // This already includes /api/products path
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Add token to requests automatically
-productApiClient.interceptors.request.use(
-  (config) => {
-    const token =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor for error handling
-productApiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("Product API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
+// Create axios instance using centralized configuration
+const productApiClient = createAxiosInstance(API_URL);
 
 // Product API functions
 export const productApi = {

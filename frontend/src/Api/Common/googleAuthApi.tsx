@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import { createAxiosInstance, type AxiosResponse } from "../axiosConfig";
 
 // Interfaces for Google authentication
 export interface GoogleUser {
@@ -22,14 +22,8 @@ const GOOGLE_AUTH_API_URL =
   import.meta.env.VITE_GOOGLE_AUTH_API_URL ||
   "http://localhost:5000/api/googleauth";
 
-// Create axios instance with default config
-const googleAuthApiClient: AxiosInstance = axios.create({
-  baseURL: GOOGLE_AUTH_API_URL,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+// Create axios instance using centralized configuration
+const googleAuthApiClient = createAxiosInstance(GOOGLE_AUTH_API_URL);
 
 // Google Auth API functions
 export const googleAuthApi = {

@@ -1,40 +1,12 @@
 // cartApi.tsx - Updated with correct Vite environment variables
-import axios from "axios";
+import { createAxiosInstance } from "../axiosConfig";
 
 // Base URL using gateway service - according to documentation
 const API_BASE_URL =
   import.meta.env.VITE_CART_API_URL || "http://localhost:5000/api/cart";
 
-// Create axios instance with default config
-const cartApi = axios.create({
-  baseURL: API_BASE_URL, // This already includes /api/cart path
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true, // Include cookies for authentication
-});
-
-// Add token to requests automatically
-cartApi.interceptors.request.use(
-  (config) => {
-    const token =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor for error handling
-cartApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("Cart API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
+// Create axios instance using centralized configuration
+const cartApi = createAxiosInstance(API_BASE_URL);
 
 // ==========================================
 // CART API FUNCTIONS

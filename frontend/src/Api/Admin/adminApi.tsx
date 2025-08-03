@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import { createAxiosInstance, type AxiosResponse } from "../axiosConfig";
 
 // Admin interfaces
 export interface AdminCredentials {
@@ -79,26 +79,8 @@ export interface ApiResponse<T = any> {
 const API_URL =
   import.meta.env.VITE_ADMIN_API_URL || "http://localhost:5000/api/admin";
 
-// Create axios instance with default config
-const adminApiClient: AxiosInstance = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Response interceptor to handle errors
-adminApiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // JWT cookie will be automatically cleared by the server
-      window.location.href = "/admin/login";
-    }
-    return Promise.reject(error);
-  }
-);
+// Create axios instance using centralized configuration
+const adminApiClient = createAxiosInstance(API_URL);
 
 // Admin API functions
 export const adminApi = {
