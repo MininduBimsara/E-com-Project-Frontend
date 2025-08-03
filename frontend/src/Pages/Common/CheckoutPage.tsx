@@ -1,6 +1,7 @@
-// CheckoutPage.tsx (Refactored Main Component)
+// CheckoutPage.tsx (Updated with PayPal Integration)
 import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { useCart } from "../../Context/CartContext";
 
 // Component imports
@@ -35,6 +36,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const selectedShipping = shippingOptions.find(
     (opt) => opt.id === formData.shippingMethod
   );
+
+  // PayPal configuration
+  const paypalOptions = {
+    clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test",
+    currency: "USD",
+    intent: "capture" as const,
+  };
 
   const handleInputChangeWithValidation = (field: string, value: string) => {
     handleInputChange(field, value);
@@ -76,60 +84,72 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     setIsSubmitting(false);
   };
 
+  const handleOrderComplete = (orderData: any) => {
+    // Handle successful PayPal payment
+    if (onOrderComplete) {
+      onOrderComplete(orderData);
+    }
+    clearCart();
+    setCurrentStep(3);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50/30 to-white py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <CheckoutHeader onBack={onBack} />
+    <PayPalScriptProvider options={paypalOptions}>
+      <div className="min-h-screen bg-gradient-to-b from-green-50/30 to-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <CheckoutHeader onBack={onBack} />
 
-        {/* Progress Steps */}
-        <ProgressSteps currentStep={currentStep} />
+          {/* Progress Steps */}
+          <ProgressSteps currentStep={currentStep} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <AnimatePresence mode="wait">
-              {/* Step 1: Shipping Information */}
-              {currentStep === 1 && (
-                <ShippingForm
-                  formData={formData}
-                  errors={errors}
-                  onInputChange={handleInputChangeWithValidation}
-                  onNext={handleNext}
-                />
-              )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            {/* Main Content */}
+            <div className="lg:col-span-2">
+              <AnimatePresence mode="wait">
+                {/* Step 1: Shipping Information */}
+                {currentStep === 1 && (
+                  <ShippingForm
+                    formData={formData}
+                    errors={errors}
+                    onInputChange={handleInputChangeWithValidation}
+                    onNext={handleNext}
+                  />
+                )}
 
-              {/* Step 2: Payment Information */}
-              {currentStep === 2 && (
-                <PaymentForm
-                  formData={formData}
-                  errors={errors}
-                  isSubmitting={isSubmitting}
-                  onInputChange={handleInputChangeWithValidation}
-                  onPrevious={handlePrevious}
-                  onSubmit={handleSubmit}
-                />
-              )}
+                {/* Step 2: Payment Information */}
+                {currentStep === 2 && (
+                  <PaymentForm
+                    formData={formData}
+                    errors={errors}
+                    isSubmitting={isSubmitting}
+                    onInputChange={handleInputChangeWithValidation}
+                    onPrevious={handlePrevious}
+                    onSubmit={handleSubmit}
+                    onOrderComplete={handleOrderComplete}
+                  />
+                )}
 
-              {/* Step 3: Order Complete */}
-              {currentStep === 3 && (
-                <OrderComplete selectedShipping={selectedShipping} />
-              )}
-            </AnimatePresence>
-          </div>
+                {/* Step 3: Order Complete */}
+                {currentStep === 3 && (
+                  <OrderComplete selectedShipping={selectedShipping} />
+                )}
+              </AnimatePresence>
+            </div>
 
-          {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <OrderSummary
-              items={items}
-              totalPrice={totalPrice}
-              totalCarbonFootprint={totalCarbonFootprint}
-              selectedShipping={selectedShipping}
-            />
+            {/* Order Summary Sidebar */}
+            <div className="lg:col-span-1">
+              <OrderSummary
+                items={items}
+                totalPrice={totalPrice}
+                totalCarbonFootprint={totalCarbonFootprint}
+                selectedShipping={selectedShipping}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </PayPalScriptProvider>
   );
 };
 

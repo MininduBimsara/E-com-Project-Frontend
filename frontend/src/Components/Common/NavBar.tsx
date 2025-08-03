@@ -31,19 +31,10 @@ function Header() {
 
   const { itemCount, openCart } = useCart();
 
-  // Redux selectors
+  // Redux selectors - This is the main state we're watching
   const { user, isAuthenticated, loading, error } = useSelector(
     (state: RootState) => state.user
   );
-
-  const cartItemCount = 0;
-  const isLoggedIn = isAuthenticated;
-  const userName = user?.name || user?.firstName || user?.username || "";
-  const userAvatar = user?.avatar || user?.profilePicture || "";
-  const userRole = user?.role || "";
-
-  // Check if user is admin
-  const isAdmin = userRole === "admin" || userRole === "super_admin";
 
   // Get current path
   const location = useLocation();
@@ -113,7 +104,7 @@ function Header() {
 
   const handleAuthSuccess = (userData: any) => {
     setIsAuthModalOpen(false);
-    // Verify auth again to update the state
+    // Force a re-verification to update the state immediately
     dispatch(verifyAuth());
   };
 
@@ -143,6 +134,14 @@ function Header() {
     // Navigate to admin dashboard
     navigate("/admin/dashboard");
   };
+
+  // Debug logging - Remove this in production
+  console.log("NavBar Debug:", {
+    isAuthenticated,
+    user,
+    loading,
+    userName: user?.name || user?.firstName || user?.username || "",
+  });
 
   return (
     <>
@@ -310,8 +309,8 @@ function Header() {
                     Loading...
                   </span>
                 </div>
-              ) : isLoggedIn && userName ? (
-                // User Menu (when logged in)
+              ) : isAuthenticated && user ? (
+                // User Menu (when logged in) - Fixed condition
                 <div className="relative user-menu">
                   <motion.button
                     onClick={toggleUserMenu}
@@ -319,10 +318,12 @@ function Header() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    {userAvatar ? (
+                    {user.avatar || user.profilePicture ? (
                       <img
-                        src={userAvatar}
-                        alt={userName}
+                        src={user.avatar || user.profilePicture}
+                        alt={
+                          user.name || user.firstName || user.username || "User"
+                        }
                         className="w-8 h-8 lg:w-9 lg:h-9 rounded-full object-cover border-2 border-green-200"
                         onError={(e) => {
                           // Fallback to initials if image fails to load
@@ -333,12 +334,14 @@ function Header() {
                     ) : (
                       <div className="w-8 h-8 lg:w-9 lg:h-9 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center">
                         <span className="text-white text-sm font-medium">
-                          {userName.charAt(0).toUpperCase()}
+                          {(user.name || user.firstName || user.username || "U")
+                            .charAt(0)
+                            .toUpperCase()}
                         </span>
                       </div>
                     )}
                     <span className="hidden md:block text-sm font-light text-gray-700 tracking-wide">
-                      {userName}
+                      {user.name || user.firstName || user.username || "User"}
                     </span>
                     <motion.div
                       animate={{ rotate: isUserMenuOpen ? 180 : 0 }}
@@ -365,9 +368,14 @@ function Header() {
                             Signed in as
                           </div>
                           <div className="text-sm font-medium text-gray-800 truncate">
-                            {user?.email || userName}
+                            {user?.email ||
+                              user?.name ||
+                              user?.firstName ||
+                              user?.username ||
+                              "User"}
                           </div>
-                          {isAdmin && (
+                          {(user?.role === "admin" ||
+                            user?.role === "super_admin") && (
                             <div className="text-xs text-green-600 font-medium tracking-wide mt-1 flex items-center">
                               <Shield className="w-3 h-3 mr-1" />
                               ADMIN
@@ -376,7 +384,8 @@ function Header() {
                         </div>
 
                         {/* Admin Dashboard Button - Only show for admins */}
-                        {isAdmin && (
+                        {(user?.role === "admin" ||
+                          user?.role === "super_admin") && (
                           <motion.button
                             onClick={handleAdminDashboardClick}
                             className="w-full px-4 py-3 text-left text-sm text-green-700 hover:bg-green-50/50 flex items-center space-x-3 transition-colors duration-200 font-medium"
@@ -477,11 +486,13 @@ function Header() {
 
                 {/* Mobile Authentication Section */}
                 <div className="pt-4 border-t border-green-100/50 mt-4">
-                  {isLoggedIn && userName ? (
+                  {isAuthenticated && user ? (
                     <div className="space-y-2">
                       <div className="px-6 py-2 text-sm font-light text-gray-500">
-                        Signed in as {userName}
-                        {isAdmin && (
+                        Signed in as{" "}
+                        {user.name || user.firstName || user.username || "User"}
+                        {(user?.role === "admin" ||
+                          user?.role === "super_admin") && (
                           <span className="block text-xs text-green-600 font-medium tracking-wide mt-1">
                             ADMIN ACCESS
                           </span>
@@ -489,7 +500,8 @@ function Header() {
                       </div>
 
                       {/* Mobile Admin Dashboard Button */}
-                      {isAdmin && (
+                      {(user?.role === "admin" ||
+                        user?.role === "super_admin") && (
                         <motion.button
                           onClick={() => {
                             handleAdminDashboardClick();

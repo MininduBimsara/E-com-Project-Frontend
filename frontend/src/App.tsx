@@ -7,6 +7,10 @@ import About from "./Pages/Common/About";
 import Products from "./Pages/Common/ProductPage";
 // import AuthModal from "./Pages/Common/AuthForm";
 
+//flow
+import PaymentFlowDocumentation from "./Flow/PaymentFlow";
+import CartFlowDiagrams from "./Flow/CartFlow";
+
 // Import the cart system components
 import { CartProvider } from "./Context/CartContext";
 import CartSidebar from "./Components/Common/Cart/CartSidebar";
@@ -33,6 +37,8 @@ function App() {
                 <Route path="/products" element={<Products />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/payment-flow" element={<PaymentFlowDocumentation />} />
+                <Route path="/cart-flow" element={<CartFlowDiagrams />} />
                 {/* Add more routes as needed */}
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
               </Routes>

@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import { createAxiosInstance, type AxiosResponse } from "../axiosConfig";
 
 // Interfaces for user and credentials
 export interface Credentials {
@@ -23,16 +23,10 @@ export interface User {
 
 // Base URL using gateway service - according to documentation
 const API_URL =
-  import.meta.env.VITE_AUTH_API_URL || "http://localhost:5000/api/auth";
+  import.meta.env.VITE_AUTH_API_URL || "http://localhost:5000/api/auth/auth";
 
-// Create axios instance with default config
-const authApiClient: AxiosInstance = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+// Create axios instance using centralized configuration
+const authApiClient = createAxiosInstance(API_URL);
 
 // Auth API functions
 export const authApi = {

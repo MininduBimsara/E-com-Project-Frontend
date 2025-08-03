@@ -12,7 +12,6 @@ import {
 import { useCart } from "../../../Context/CartContext";
 import toast from "react-hot-toast";
 
-
 interface Product {
   id: string;
   name: string;
@@ -41,6 +40,7 @@ function ProductsGrid({ products, onProductView, loading = false }) {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const { addItem } = useCart();
 
   const toggleFavorite = (productId: string) => {
     setFavorites((prev) => {
@@ -54,41 +54,49 @@ function ProductsGrid({ products, onProductView, loading = false }) {
     });
   };
 
-  const { addItem } = useCart();
-
-  const handleImageError = (productId: string) => {
-    setImageErrors((prev) => new Set([...prev, productId]));
+  const handleImageError = (imageKey: string) => {
+    setImageErrors((prev) => new Set([...prev, imageKey]));
   };
 
-  // FIXED: Image source handling
-  const getImageSrc = (product: Product) => {
-    if (imageErrors.has(product.id)) {
-      // Fallback image based on category
-      switch (product.category.toLowerCase()) {
-        case "cloths":
-        case "clothing":
-          return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-        case "kitchen":
-          return "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-        case "accessories":
-          return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-        default:
-          return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
-      }
+  const getFallbackImage = (category?: string) => {
+    switch (category?.toLowerCase()) {
+      case "cloths":
+      case "clothing":
+        return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+      case "kitchen":
+        return "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+      case "accessories":
+        return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
+      default:
+        return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
     }
-
-
-
-    // Use the first image if available
-    if (product.images && product.images.length > 0) {
-      return product.images[0];
-    }
-
-    // Final fallback
-    return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80";
   };
 
-  // FIXED: Product view handler
+  // FIXED: Compatible with your multer filename pattern
+const getImageSrc = (product: Product) => {
+  const firstImage =
+    product.images && product.images.length > 0 ? product.images[0] : null;
+
+  const imageKey = `${product.id}-${firstImage}`;
+
+  if (imageErrors.has(imageKey)) {
+    return getFallbackImage(product.category);
+  }
+
+  if (!firstImage) {
+    return getFallbackImage(product.category);
+  }
+
+  // Ensure only filename is appended to URL
+  const cleanFilename =
+    typeof firstImage === "string" ? firstImage.split("/").pop() : "";
+
+  const gatewayUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  return `${gatewayUrl}/api/products/product-images/${cleanFilename}`;
+};
+
+
+
   const handleProductViewClick = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
@@ -216,203 +224,213 @@ function ProductsGrid({ products, onProductView, loading = false }) {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-16"
           >
             <AnimatePresence>
-              {products.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  variants={itemVariants}
-                  layout
-                  className="group relative"
-                  onHoverStart={() => setHoveredProduct(product.id)}
-                  onHoverEnd={() => setHoveredProduct(null)}
-                >
-                  {/* Product Card */}
-                  <div className="relative backdrop-blur-xl bg-white/90 border border-white/20 rounded-3xl overflow-hidden group-hover:shadow-2xl group-hover:shadow-green-100/20 transition-all duration-500">
-                    {/* Product Image */}
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <img
-                        src={getImageSrc(product)}
-                        alt={product.name}
-                        onError={() => handleImageError(product.id)}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        crossOrigin="anonymous"
-                      />
+              {products.map((product, index) => {
+                const firstImage =
+                  product.images && product.images.length > 0
+                    ? product.images[0]
+                    : null;
+                const imageKey = `${product.id}-${firstImage}`;
 
-                      {/* Image Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                return (
+                  <motion.div
+                    key={product.id}
+                    variants={itemVariants}
+                    layout
+                    className="group relative"
+                    onHoverStart={() => setHoveredProduct(product.id)}
+                    onHoverEnd={() => setHoveredProduct(null)}
+                  >
+                    {/* Product Card */}
+                    <div className="relative backdrop-blur-xl bg-white/90 border border-white/20 rounded-3xl overflow-hidden group-hover:shadow-2xl group-hover:shadow-green-100/20 transition-all duration-500">
+                      {/* Product Image */}
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        <img
+                          src={getImageSrc(product)}
+                          alt={product.name}
+                          onError={() => handleImageError(imageKey)}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          crossOrigin="anonymous"
+                        />
 
-                      {/* Badges */}
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
-                        {product.isNew && (
-                          <span className="bg-green-600/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full">
-                            NEW
-                          </span>
-                        )}
-                        {product.isPopular && (
-                          <span className="bg-amber-500/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full">
-                            POPULAR
-                          </span>
-                        )}
-                        {product.isBestseller && (
-                          <span className="bg-purple-600/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full flex items-center">
-                            <Award className="w-3 h-3 mr-1" />
-                            BESTSELLER
-                          </span>
-                        )}
-                      </div>
+                        {/* Image Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                      {/* Eco Rating */}
-                      <div className="absolute top-4 right-4">
-                        <div
-                          className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${
-                            product.rating === "A+"
-                              ? "bg-green-600/90 text-white"
-                              : product.rating === "A"
-                              ? "bg-green-500/90 text-white"
-                              : "bg-yellow-500/90 text-white"
-                          }`}
-                        >
-                          {product.rating}
-                        </div>
-                      </div>
-
-                      {/* Carbon Footprint */}
-                      <div className="absolute bottom-4 left-4">
-                        <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-gray-700 flex items-center">
-                          <Leaf className="w-3 h-3 mr-1 text-green-600" />
-                          {product.carbonFootprint}kg CO₂
-                        </div>
-                      </div>
-
-                      {/* Quick Actions */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{
-                          opacity: hoveredProduct === product.id ? 1 : 0,
-                          y: hoveredProduct === product.id ? 0 : 20,
-                        }}
-                        transition={{ duration: 0.3 }}
-                        className="absolute bottom-4 right-4 flex gap-2"
-                      >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(product.id);
-                          }}
-                          className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
-                            favorites.has(product.id)
-                              ? "bg-red-500/90 text-white"
-                              : "bg-white/90 text-gray-600 hover:bg-red-500/90 hover:text-white"
-                          }`}
-                        >
-                          <Heart
-                            className="w-4 h-4"
-                            fill={
-                              favorites.has(product.id)
-                                ? "currentColor"
-                                : "none"
-                            }
-                          />
-                        </button>
-
-                        <button
-                          onClick={(e) => handleProductViewClick(e, product)}
-                          className="p-2 rounded-full bg-green-600/90 text-white backdrop-blur-sm hover:bg-green-700/90 transition-all duration-300"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                      </motion.div>
-                    </div>
-
-                    {/* Product Info */}
-                    <div className="p-6">
-                      {/* Category & Eco Label */}
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm uppercase tracking-[0.15em] text-green-600 font-light">
-                          {product.category}
-                        </span>
-                        <span className="bg-green-100/80 text-green-700 px-2 py-1 text-xs font-light tracking-wider rounded">
-                          {product.ecoLabel}
-                        </span>
-                      </div>
-
-                      {/* Product Name */}
-                      <h4 className="text-2xl md:text-3xl font-light tracking-wider text-green-800 mb-3 group-hover:text-green-600 transition-colors duration-500">
-                        {product.name}
-                      </h4>
-
-                      {/* Description */}
-                      <p className="text-gray-600/80 font-light leading-relaxed mb-4 line-clamp-2">
-                        {product.description}
-                      </p>
-
-                      {/* Features */}
-                      {product.features && product.features.length > 0 && (
-                        <div className="mb-4">
-                          <div className="flex flex-wrap gap-1">
-                            {product.features
-                              .slice(0, 3)
-                              .map((feature, idx) => (
-                                <span
-                                  key={idx}
-                                  className="text-xs text-gray-500 bg-gray-100/80 px-2 py-1 rounded font-light"
-                                >
-                                  {feature}
-                                </span>
-                              ))}
-                            {product.features.length > 3 && (
-                              <span className="text-xs text-gray-500 font-light">
-                                +{product.features.length - 3} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Price */}
-                      <div className="flex items-center justify-between mb-6">
-                        <div>
-                          <div className="text-xl font-light text-green-700 italic">
-                            Rs. {product.price.toLocaleString()}
-                          </div>
-                          {product.originalPrice && (
-                            <div className="text-sm text-gray-400 line-through font-light">
-                              Rs. {product.originalPrice.toLocaleString()}
-                            </div>
+                        {/* Badges */}
+                        <div className="absolute top-4 left-4 flex flex-col gap-2">
+                          {product.isNew && (
+                            <span className="bg-green-600/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full">
+                              NEW
+                            </span>
+                          )}
+                          {product.isPopular && (
+                            <span className="bg-amber-500/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full">
+                              POPULAR
+                            </span>
+                          )}
+                          {product.isBestseller && (
+                            <span className="bg-purple-600/90 text-white px-3 py-1 text-xs font-light tracking-wider backdrop-blur-sm rounded-full flex items-center">
+                              <Award className="w-3 h-3 mr-1" />
+                              BESTSELLER
+                            </span>
                           )}
                         </div>
 
-                        {/* Stock Status */}
-                        <div
-                          className={`text-xs font-light tracking-wider ${
-                            product.inStock ? "text-green-600" : "text-red-500"
-                          }`}
-                        >
-                          {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
+                        {/* Eco Rating */}
+                        <div className="absolute top-4 right-4">
+                          <div
+                            className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm ${
+                              product.rating === "A+"
+                                ? "bg-green-600/90 text-white"
+                                : product.rating === "A"
+                                ? "bg-green-500/90 text-white"
+                                : "bg-yellow-500/90 text-white"
+                            }`}
+                          >
+                            {product.rating}
+                          </div>
                         </div>
+
+                        {/* Carbon Footprint */}
+                        <div className="absolute bottom-4 left-4">
+                          <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-gray-700 flex items-center">
+                            <Leaf className="w-3 h-3 mr-1 text-green-600" />
+                            {product.carbonFootprint}kg CO₂
+                          </div>
+                        </div>
+
+                        {/* Quick Actions */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{
+                            opacity: hoveredProduct === product.id ? 1 : 0,
+                            y: hoveredProduct === product.id ? 0 : 20,
+                          }}
+                          transition={{ duration: 0.3 }}
+                          className="absolute bottom-4 right-4 flex gap-2"
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(product.id);
+                            }}
+                            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
+                              favorites.has(product.id)
+                                ? "bg-red-500/90 text-white"
+                                : "bg-white/90 text-gray-600 hover:bg-red-500/90 hover:text-white"
+                            }`}
+                          >
+                            <Heart
+                              className="w-4 h-4"
+                              fill={
+                                favorites.has(product.id)
+                                  ? "currentColor"
+                                  : "none"
+                              }
+                            />
+                          </button>
+
+                          <button
+                            onClick={(e) => handleProductViewClick(e, product)}
+                            className="p-2 rounded-full bg-green-600/90 text-white backdrop-blur-sm hover:bg-green-700/90 transition-all duration-300"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </motion.div>
                       </div>
 
-                      {/* Add to Cart Button */}
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        disabled={!product.inStock}
-                        onClick={(e) => handleAddToCart(e, product)}
-                        className={`w-full py-3 font-light tracking-[0.1em] text-sm transition-all duration-500 flex items-center justify-center ${
-                          product.inStock
-                            ? "bg-transparent border border-green-600/40 text-green-700 hover:bg-green-600 hover:text-white"
-                            : "bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed"
-                        }`}
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        {product.inStock ? "ADD TO CART" : "OUT OF STOCK"}
-                      </motion.button>
-                    </div>
+                      {/* Product Info */}
+                      <div className="p-6">
+                        {/* Category & Eco Label */}
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm uppercase tracking-[0.15em] text-green-600 font-light">
+                            {product.category}
+                          </span>
+                          <span className="bg-green-100/80 text-green-700 px-2 py-1 text-xs font-light tracking-wider rounded">
+                            {product.ecoLabel}
+                          </span>
+                        </div>
 
-                    {/* Hover Line Effect */}
-                    <div className="absolute bottom-0 left-0 w-0 h-1 bg-green-600 group-hover:w-full transition-all duration-700"></div>
-                  </div>
-                </motion.div>
-              ))}
+                        {/* Product Name */}
+                        <h4 className="text-2xl md:text-3xl font-light tracking-wider text-green-800 mb-3 group-hover:text-green-600 transition-colors duration-500">
+                          {product.name}
+                        </h4>
+
+                        {/* Description */}
+                        <p className="text-gray-600/80 font-light leading-relaxed mb-4 line-clamp-2">
+                          {product.description}
+                        </p>
+
+                        {/* Features */}
+                        {product.features && product.features.length > 0 && (
+                          <div className="mb-4">
+                            <div className="flex flex-wrap gap-1">
+                              {product.features
+                                .slice(0, 3)
+                                .map((feature, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="text-xs text-gray-500 bg-gray-100/80 px-2 py-1 rounded font-light"
+                                  >
+                                    {feature}
+                                  </span>
+                                ))}
+                              {product.features.length > 3 && (
+                                <span className="text-xs text-gray-500 font-light">
+                                  +{product.features.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Price */}
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <div className="text-xl font-light text-green-700 italic">
+                              Rs. {product.price.toLocaleString()}
+                            </div>
+                            {product.originalPrice && (
+                              <div className="text-sm text-gray-400 line-through font-light">
+                                Rs. {product.originalPrice.toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Stock Status */}
+                          <div
+                            className={`text-xs font-light tracking-wider ${
+                              product.inStock
+                                ? "text-green-600"
+                                : "text-red-500"
+                            }`}
+                          >
+                            {product.inStock ? "IN STOCK" : "OUT OF STOCK"}
+                          </div>
+                        </div>
+
+                        {/* Add to Cart Button */}
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          disabled={!product.inStock}
+                          onClick={(e) => handleAddToCart(e, product)}
+                          className={`w-full py-3 font-light tracking-[0.1em] text-sm transition-all duration-500 flex items-center justify-center ${
+                            product.inStock
+                              ? "bg-transparent border border-green-600/40 text-green-700 hover:bg-green-600 hover:text-white"
+                              : "bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed"
+                          }`}
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          {product.inStock ? "ADD TO CART" : "OUT OF STOCK"}
+                        </motion.button>
+                      </div>
+
+                      {/* Hover Line Effect */}
+                      <div className="absolute bottom-0 left-0 w-0 h-1 bg-green-600 group-hover:w-full transition-all duration-700"></div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </motion.div>
         )}

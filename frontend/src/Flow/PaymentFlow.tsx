@@ -1,13 +1,40 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Define types for payment steps and flows
+
+type StatusType =
+  | "pending"
+  | "processing"
+  | "awaiting_approval"
+  | "approved"
+  | "completed"
+  | "finalized";
+
+interface PaymentStep {
+  id: number;
+  title: string;
+  description: string;
+  frontend: string;
+  backend: string;
+  payload: unknown;
+  response: unknown;
+  status: StatusType;
+}
+
+type PaymentFlowKey = "paypal" | "stripe";
+
+type PaymentFlows = {
+  [key in PaymentFlowKey]: PaymentStep[];
+};
 
 const PaymentFlowDocumentation = () => {
   const [activeStep, setActiveStep] = useState(0);
-  const [selectedFlow, setSelectedFlow] = useState('paypal');
+  const [selectedFlow, setSelectedFlow] = useState<PaymentFlowKey>("paypal");
   const [showApiDetails, setShowApiDetails] = useState(false);
 
   // Payment flow steps for different methods
-  const paymentFlows = {
+  const paymentFlows: PaymentFlows = {
     paypal: [
       {
         id: 1,
@@ -17,7 +44,7 @@ const PaymentFlowDocumentation = () => {
         backend: "POST /paypal/create-order",
         payload: {
           orderId: "ORDER_12345",
-          amount: 99.99
+          amount: 99.99,
         },
         response: {
           success: true,
@@ -25,12 +52,20 @@ const PaymentFlowDocumentation = () => {
             orderId: "ORDER_12345",
             paypalOrderId: "PAYPAL_ORDER_789",
             links: [
-              { href: "https://paypal.com/approve?token=...", rel: "approve", method: "GET" },
-              { href: "https://api.paypal.com/capture", rel: "capture", method: "POST" }
-            ]
-          }
+              {
+                href: "https://paypal.com/approve?token=...",
+                rel: "approve",
+                method: "GET",
+              },
+              {
+                href: "https://api.paypal.com/capture",
+                rel: "capture",
+                method: "POST",
+              },
+            ],
+          },
         },
-        status: "pending"
+        status: "pending",
       },
       {
         id: 2,
@@ -40,21 +75,23 @@ const PaymentFlowDocumentation = () => {
         backend: "PayPal API: POST /v2/checkout/orders",
         payload: {
           intent: "CAPTURE",
-          purchase_units: [{
-            reference_id: "ORDER_12345",
-            amount: { currency_code: "USD", value: "99.99" }
-          }],
+          purchase_units: [
+            {
+              reference_id: "ORDER_12345",
+              amount: { currency_code: "USD", value: "99.99" },
+            },
+          ],
           application_context: {
             return_url: "https://yoursite.com/payment-success",
-            cancel_url: "https://yoursite.com/checkout"
-          }
+            cancel_url: "https://yoursite.com/checkout",
+          },
         },
         response: {
           id: "PAYPAL_ORDER_789",
           status: "CREATED",
-          links: [...]
+          links: [], // <-- fixed: replaced ... with empty array
         },
-        status: "processing"
+        status: "processing",
       },
       {
         id: 3,
@@ -64,7 +101,7 @@ const PaymentFlowDocumentation = () => {
         backend: "No backend call (user on PayPal site)",
         payload: "User authenticates and approves payment on PayPal",
         response: "PayPal redirects back with token parameter",
-        status: "awaiting_approval"
+        status: "awaiting_approval",
       },
       {
         id: 4,
@@ -74,7 +111,7 @@ const PaymentFlowDocumentation = () => {
         backend: "No immediate call (waiting for capture)",
         payload: "Extract token from URL parameters",
         response: "Token extracted successfully",
-        status: "approved"
+        status: "approved",
       },
       {
         id: 5,
@@ -84,7 +121,7 @@ const PaymentFlowDocumentation = () => {
         backend: "POST /paypal/capture-order",
         payload: {
           orderId: "ORDER_12345",
-          paypalOrderId: "PAYPAL_ORDER_789"
+          paypalOrderId: "PAYPAL_ORDER_789",
         },
         response: {
           success: true,
@@ -94,12 +131,12 @@ const PaymentFlowDocumentation = () => {
               _id: "PAYMENT_456",
               transaction_id: "TXN-1234567890",
               payment_status: "completed",
-              amount: 99.99
+              amount: 99.99,
             },
-            order: { status: "confirmed" }
-          }
+            order: { status: "confirmed" },
+          },
         },
-        status: "completed"
+        status: "completed",
       },
       {
         id: 6,
@@ -111,14 +148,14 @@ const PaymentFlowDocumentation = () => {
           paymentStatus: "paid",
           status: "confirmed",
           paymentId: "TXN-1234567890",
-          paymentMethod: "paypal"
+          paymentMethod: "paypal",
         },
         response: {
           success: true,
-          message: "Order status updated"
+          message: "Order status updated",
         },
-        status: "finalized"
-      }
+        status: "finalized",
+      },
     ],
     stripe: [
       {
@@ -129,7 +166,7 @@ const PaymentFlowDocumentation = () => {
         backend: "POST /stripe/create-payment-intent",
         payload: { orderId: "ORDER_12345", amount: 99.99 },
         response: { client_secret: "pi_xxx_secret_xxx" },
-        status: "pending"
+        status: "pending",
       },
       {
         id: 2,
@@ -139,18 +176,18 @@ const PaymentFlowDocumentation = () => {
         backend: "Stripe handles card processing",
         payload: "Card details and billing info",
         response: "Payment confirmation",
-        status: "completed"
-      }
-    ]
+        status: "completed",
+      },
+    ],
   };
 
-  const statusColors = {
+  const statusColors: Record<StatusType, string> = {
     pending: "bg-yellow-100 text-yellow-800 border-yellow-300",
     processing: "bg-blue-100 text-blue-800 border-blue-300",
     awaiting_approval: "bg-purple-100 text-purple-800 border-purple-300",
     approved: "bg-green-100 text-green-800 border-green-300",
     completed: "bg-emerald-100 text-emerald-800 border-emerald-300",
-    finalized: "bg-gray-100 text-gray-800 border-gray-300"
+    finalized: "bg-gray-100 text-gray-800 border-gray-300",
   };
 
   const currentFlow = paymentFlows[selectedFlow];
@@ -188,17 +225,21 @@ const PaymentFlowDocumentation = () => {
             <button
               key={flow}
               onClick={() => {
-                setSelectedFlow(flow);
+                setSelectedFlow(flow as PaymentFlowKey);
                 setActiveStep(0);
               }}
               className={`px-6 py-3 rounded-lg border-2 transition-all duration-300 font-light tracking-wider capitalize ${
                 selectedFlow === flow
-                  ? 'border-green-600 bg-green-50 text-green-800'
-                  : 'border-gray-200 text-gray-600 hover:border-green-300'
+                  ? "border-green-600 bg-green-50 text-green-800"
+                  : "border-gray-200 text-gray-600 hover:border-green-300"
               }`}
             >
               {flow}
-              {flow === 'stripe' && <span className="ml-2 text-xs text-gray-400">(Coming Soon)</span>}
+              {flow === "stripe" && (
+                <span className="ml-2 text-xs text-gray-400">
+                  (Coming Soon)
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -219,15 +260,15 @@ const PaymentFlowDocumentation = () => {
             onClick={() => setShowApiDetails(!showApiDetails)}
             className="px-4 py-2 text-sm border border-green-600 text-green-600 rounded hover:bg-green-50 transition-colors duration-300"
           >
-            {showApiDetails ? 'Hide' : 'Show'} API Details
+            {showApiDetails ? "Hide" : "Show"} API Details
           </button>
         </div>
         <div className="flex space-x-2">
-          {currentFlow.map((step, index) => (
+          {currentFlow.map((step: PaymentStep, index: number) => (
             <div
               key={step.id}
               className={`flex-1 h-2 rounded-full cursor-pointer transition-all duration-300 ${
-                index <= activeStep ? 'bg-green-600' : 'bg-gray-200'
+                index <= activeStep ? "bg-green-600" : "bg-gray-200"
               }`}
               onClick={() => setActiveStep(index)}
             />
@@ -248,7 +289,7 @@ const PaymentFlowDocumentation = () => {
             Steps Overview
           </h3>
           <div className="space-y-2">
-            {currentFlow.map((step, index) => (
+            {currentFlow.map((step: PaymentStep, index: number) => (
               <motion.div
                 key={step.id}
                 whileHover={{ scale: 1.02 }}
@@ -256,21 +297,23 @@ const PaymentFlowDocumentation = () => {
                 onClick={() => setActiveStep(index)}
                 className={`p-4 rounded-lg border cursor-pointer transition-all duration-300 ${
                   index === activeStep
-                    ? 'border-green-600 bg-green-50'
-                    : 'border-gray-200 hover:border-green-300'
+                    ? "border-green-600 bg-green-50"
+                    : "border-gray-200 hover:border-green-300"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-gray-800 text-sm">
                     {step.title}
                   </h4>
-                  <span className={`px-2 py-1 rounded-full text-xs border ${statusColors[step.status]}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs border ${
+                      statusColors[step.status]
+                    }`}
+                  >
                     {step.status}
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 mt-1">
-                  {step.description}
-                </p>
+                <p className="text-xs text-gray-600 mt-1">{step.description}</p>
               </motion.div>
             ))}
           </div>
@@ -302,8 +345,12 @@ const PaymentFlowDocumentation = () => {
                     {currentStep.description}
                   </p>
                 </div>
-                <span className={`px-4 py-2 rounded-full text-sm border font-medium ${statusColors[currentStep.status]}`}>
-                  {currentStep.status.replace('_', ' ')}
+                <span
+                  className={`px-4 py-2 rounded-full text-sm border font-medium ${
+                    statusColors[currentStep.status]
+                  }`}
+                >
+                  {currentStep.status.replace("_", " ")}
                 </span>
               </div>
 
@@ -336,7 +383,7 @@ const PaymentFlowDocumentation = () => {
                 {showApiDetails && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
+                    animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
                     className="space-y-6"
@@ -383,7 +430,11 @@ const PaymentFlowDocumentation = () => {
                 </span>
 
                 <button
-                  onClick={() => setActiveStep(Math.min(currentFlow.length - 1, activeStep + 1))}
+                  onClick={() =>
+                    setActiveStep(
+                      Math.min(currentFlow.length - 1, activeStep + 1)
+                    )
+                  }
                   disabled={activeStep === currentFlow.length - 1}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-light tracking-wider"
                 >
@@ -415,7 +466,7 @@ const PaymentFlowDocumentation = () => {
               <li>• fetchPaymentDetails</li>
             </ul>
           </div>
-          
+
           <div className="bg-green-50 border border-green-200 rounded-lg p-6">
             <h4 className="font-medium text-green-800 mb-2">API Endpoints</h4>
             <ul className="text-sm text-green-700 space-y-1">
@@ -425,7 +476,7 @@ const PaymentFlowDocumentation = () => {
               <li>• GET /:transactionId</li>
             </ul>
           </div>
-          
+
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
             <h4 className="font-medium text-purple-800 mb-2">Payment States</h4>
             <ul className="text-sm text-purple-700 space-y-1">

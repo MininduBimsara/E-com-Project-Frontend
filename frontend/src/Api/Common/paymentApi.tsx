@@ -1,40 +1,12 @@
 // paymentApi.tsx - API functions for payment operations
-import axios from "axios";
+import { createAxiosInstance } from "../axiosConfig";
 
 // Base URL using gateway service - according to documentation
 const API_BASE_URL =
   import.meta.env.VITE_PAYMENT_API_URL || "http://localhost:5000/api/payments";
 
-// Create axios instance with default config
-const paymentApi = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true, // Include cookies for authentication
-});
-
-// Add token to requests automatically
-paymentApi.interceptors.request.use(
-  (config) => {
-    const token =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor for error handling
-paymentApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("Payment API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
+// Create axios instance using centralized configuration
+const paymentApi = createAxiosInstance(API_BASE_URL);
 
 // ==========================================
 // PAYMENT API FUNCTIONS

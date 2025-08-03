@@ -1,40 +1,12 @@
 // orderApi.tsx - Updated with correct Vite environment variables
-import axios from "axios";
+import { createAxiosInstance } from "../axiosConfig";
 
 // Base URL using gateway service - according to documentation
 const API_BASE_URL =
   import.meta.env.VITE_ORDER_API_URL || "http://localhost:5000/api/orders";
 
-// Create axios instance with default config
-const orderApi = axios.create({
-  baseURL: API_BASE_URL, // This already includes /api/orders path
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true, // Include cookies for authentication
-});
-
-// Add token to requests automatically
-orderApi.interceptors.request.use(
-  (config) => {
-    const token =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor for error handling
-orderApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("Order API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
+// Create axios instance using centralized configuration
+const orderApi = createAxiosInstance(API_BASE_URL);
 
 // ==========================================
 // ORDER API FUNCTIONS
