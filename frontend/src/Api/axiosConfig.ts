@@ -38,12 +38,9 @@ const createAxiosInstance = (
         localStorage.removeItem("token");
         sessionStorage.removeItem("token");
 
-        // Redirect to login page (you can customize this based on your routing)
-        if (window.location.pathname.startsWith("/admin")) {
-          window.location.href = "/admin/login";
-        } else {
-          window.location.href = "/login";
-        }
+        // Don't redirect automatically - let components handle auth state
+        // The verifyAuth thunk will handle setting isAuthenticated to false
+        console.log("401 Unauthorized - clearing tokens");
       }
 
       // Log errors for debugging
