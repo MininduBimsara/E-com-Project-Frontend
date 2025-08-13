@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
-import { useCart } from "../../Context/CartContext";
+import { useCart } from "../../hooks/useCart";
 
 // Component imports
 import CheckoutHeader from "../../Components/Common/Checkout/CheckoutHeader";

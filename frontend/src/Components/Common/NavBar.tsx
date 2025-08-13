@@ -17,7 +17,7 @@ import {
   Shield,
 } from "lucide-react";
 import AuthModal from "../../Pages/Common/AuthForm";
-import { useCart } from "../../Context/CartContext";
+import { useCart } from "../../hooks/useCart";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

@@ -9,7 +9,7 @@ import {
   Award,
   Loader2,
 } from "lucide-react";
-import { useCart } from "../../../Context/CartContext";
+import { useCart } from "../../../hooks/useCart";
 import toast from "react-hot-toast";
 
 interface Product {

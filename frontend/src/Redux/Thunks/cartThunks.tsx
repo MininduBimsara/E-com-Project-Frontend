@@ -34,6 +34,22 @@ import {
 } from "../Slicers/cartSlice";
 
 // ==========================================
+// LOGGING UTILITY
+// ==========================================
+
+const logThunkAction = (action: string, payload?: any) => {
+  console.log(`🔄 [Cart Thunk] ${action}`, payload ? { payload } : "");
+};
+
+const logThunkSuccess = (action: string, result: any) => {
+  console.log(`✅ [Cart Thunk] ${action} - Success:`, result);
+};
+
+const logThunkError = (action: string, error: any) => {
+  console.error(`❌ [Cart Thunk] ${action} - Error:`, error);
+};
+
+// ==========================================
 // ASYNC THUNKS
 // ==========================================
 
@@ -45,6 +61,8 @@ export const fetchCart = createAsyncThunk<
   string,
   { rejectValue: string }
 >("cart/fetchCart", async (userId: string, { dispatch, rejectWithValue }) => {
+  logThunkAction("fetchCart", { userId });
+
   try {
     dispatch(setLoading(true));
     dispatch(setLastAction("Fetching cart..."));
@@ -58,11 +76,13 @@ export const fetchCart = createAsyncThunk<
     dispatch(setCart(response.data!));
     dispatch(setLastAction("Cart fetched successfully"));
 
+    logThunkSuccess("fetchCart", response.data);
     return response.data!;
   } catch (error: any) {
     const errorMessage =
       error.response?.data?.message || error.message || "Failed to fetch cart";
     dispatch(setError(errorMessage));
+    logThunkError("fetchCart", errorMessage);
     return rejectWithValue(errorMessage);
   } finally {
     dispatch(setLoading(false));
@@ -79,6 +99,8 @@ export const fetchCartSummary = createAsyncThunk<
 >(
   "cart/fetchCartSummary",
   async (userId: string, { dispatch, rejectWithValue }) => {
+    logThunkAction("fetchCartSummary", { userId });
+
     try {
       dispatch(setLoading(true));
 
@@ -90,6 +112,7 @@ export const fetchCartSummary = createAsyncThunk<
 
       dispatch(setCartSummary(response.data!));
 
+      logThunkSuccess("fetchCartSummary", response.data);
       return response.data!;
     } catch (error: any) {
       const errorMessage =
@@ -97,6 +120,7 @@ export const fetchCartSummary = createAsyncThunk<
         error.message ||
         "Failed to fetch cart summary";
       dispatch(setError(errorMessage));
+      logThunkError("fetchCartSummary", errorMessage);
       return rejectWithValue(errorMessage);
     } finally {
       dispatch(setLoading(false));
@@ -114,6 +138,8 @@ export const addToCart = createAsyncThunk<
 >(
   "cart/addToCart",
   async ({ userId, productId, quantity }, { dispatch, rejectWithValue }) => {
+    logThunkAction("addToCart", { userId, productId, quantity });
+
     try {
       dispatch(setAdding(true));
       dispatch(setLastAction(`Adding ${quantity} item(s) to cart...`));
@@ -131,6 +157,7 @@ export const addToCart = createAsyncThunk<
       dispatch(setCart(response.data!));
       dispatch(setLastAction(`Item added to cart successfully`));
 
+      logThunkSuccess("addToCart", response.data);
       return response.data!;
     } catch (error: any) {
       const errorMessage =
@@ -138,6 +165,7 @@ export const addToCart = createAsyncThunk<
         error.message ||
         "Failed to add item to cart";
       dispatch(setError(errorMessage));
+      logThunkError("addToCart", errorMessage);
       return rejectWithValue(errorMessage);
     } finally {
       dispatch(setAdding(false));
@@ -155,6 +183,8 @@ export const updateCartItemQuantity = createAsyncThunk<
 >(
   "cart/updateCartItemQuantity",
   async ({ userId, productId, quantity }, { dispatch, rejectWithValue }) => {
+    logThunkAction("updateCartItemQuantity", { userId, productId, quantity });
+
     try {
       // Optimistic update for better UX
       dispatch(updateLocalQuantity({ productId, quantity }));
@@ -175,6 +205,7 @@ export const updateCartItemQuantity = createAsyncThunk<
       dispatch(setCart(response.data!));
       dispatch(setLastAction("Item quantity updated successfully"));
 
+      logThunkSuccess("updateCartItemQuantity", response.data);
       return response.data!;
     } catch (error: any) {
       // Revert optimistic update on error by fetching fresh cart
@@ -185,6 +216,7 @@ export const updateCartItemQuantity = createAsyncThunk<
         error.message ||
         "Failed to update item quantity";
       dispatch(setError(errorMessage));
+      logThunkError("updateCartItemQuantity", errorMessage);
       return rejectWithValue(errorMessage);
     } finally {
       dispatch(setUpdating(false));
@@ -202,6 +234,8 @@ export const removeFromCart = createAsyncThunk<
 >(
   "cart/removeFromCart",
   async ({ userId, productId }, { dispatch, rejectWithValue }) => {
+    logThunkAction("removeFromCart", { userId, productId });
+
     try {
       // Optimistic update for better UX
       dispatch(removeLocalItem(productId));
@@ -221,6 +255,7 @@ export const removeFromCart = createAsyncThunk<
       dispatch(setCart(response.data!));
       dispatch(setLastAction("Item removed from cart successfully"));
 
+      logThunkSuccess("removeFromCart", response.data);
       return response.data!;
     } catch (error: any) {
       // Revert optimistic update on error by fetching fresh cart
@@ -231,6 +266,7 @@ export const removeFromCart = createAsyncThunk<
         error.message ||
         "Failed to remove item from cart";
       dispatch(setError(errorMessage));
+      logThunkError("removeFromCart", errorMessage);
       return rejectWithValue(errorMessage);
     } finally {
       dispatch(setRemoving(false));
@@ -248,6 +284,8 @@ export const clearCartItems = createAsyncThunk<
 >(
   "cart/clearCartItems",
   async (userId: string, { dispatch, rejectWithValue }) => {
+    logThunkAction("clearCartItems", { userId });
+
     try {
       dispatch(setClearing(true));
       dispatch(setLastAction("Clearing cart..."));
@@ -274,6 +312,7 @@ export const clearCartItems = createAsyncThunk<
 
       dispatch(setLastAction("Cart cleared successfully"));
 
+      logThunkSuccess("clearCartItems", response.data);
       return response.data?.message || "Cart cleared successfully";
     } catch (error: any) {
       const errorMessage =
@@ -281,6 +320,7 @@ export const clearCartItems = createAsyncThunk<
         error.message ||
         "Failed to clear cart";
       dispatch(setError(errorMessage));
+      logThunkError("clearCartItems", errorMessage);
       return rejectWithValue(errorMessage);
     } finally {
       dispatch(setClearing(false));
@@ -298,6 +338,8 @@ export const updateCartShipping = createAsyncThunk<
 >(
   "cart/updateCartShipping",
   async ({ userId, shippingCost }, { dispatch, rejectWithValue }) => {
+    logThunkAction("updateCartShipping", { userId, shippingCost });
+
     try {
       dispatch(setUpdating(true));
       dispatch(setLastAction("Updating shipping cost..."));
@@ -314,6 +356,7 @@ export const updateCartShipping = createAsyncThunk<
       dispatch(setCart(response.data!));
       dispatch(setLastAction("Shipping cost updated successfully"));
 
+      logThunkSuccess("updateCartShipping", response.data);
       return response.data!;
     } catch (error: any) {
       const errorMessage =
@@ -321,6 +364,7 @@ export const updateCartShipping = createAsyncThunk<
         error.message ||
         "Failed to update shipping cost";
       dispatch(setError(errorMessage));
+      logThunkError("updateCartShipping", errorMessage);
       return rejectWithValue(errorMessage);
     } finally {
       dispatch(setUpdating(false));
@@ -338,6 +382,8 @@ export const validateCartItems = createAsyncThunk<
 >(
   "cart/validateCartItems",
   async (userId: string, { dispatch, rejectWithValue }) => {
+    logThunkAction("validateCartItems", { userId });
+
     try {
       dispatch(setValidating(true));
       dispatch(setLastAction("Validating cart items..."));
@@ -366,6 +412,7 @@ export const validateCartItems = createAsyncThunk<
         )
       );
 
+      logThunkSuccess("validateCartItems", response.data);
       return response.data!;
     } catch (error: any) {
       const errorMessage =
@@ -373,6 +420,7 @@ export const validateCartItems = createAsyncThunk<
         error.message ||
         "Failed to validate cart";
       dispatch(setError(errorMessage));
+      logThunkError("validateCartItems", errorMessage);
       return rejectWithValue(errorMessage);
     } finally {
       dispatch(setValidating(false));
@@ -388,6 +436,8 @@ export const fetchCartCount = createAsyncThunk<
   string,
   { rejectValue: string }
 >("cart/fetchCartCount", async (userId: string, { rejectWithValue }) => {
+  logThunkAction("fetchCartCount", { userId });
+
   try {
     const response: ApiResponse<{ count: number }> = await getCartCount(userId);
 
@@ -395,12 +445,14 @@ export const fetchCartCount = createAsyncThunk<
       throw new Error(response.message || "Failed to fetch cart count");
     }
 
+    logThunkSuccess("fetchCartCount", response.data);
     return response.data?.count || 0;
   } catch (error: any) {
     const errorMessage =
       error.response?.data?.message ||
       error.message ||
       "Failed to fetch cart count";
+    logThunkError("fetchCartCount", errorMessage);
     return rejectWithValue(errorMessage);
   }
 });
@@ -413,6 +465,8 @@ export const fetchCartStatistics = createAsyncThunk<
   void,
   { rejectValue: string }
 >("cart/fetchCartStatistics", async (_, { dispatch, rejectWithValue }) => {
+  logThunkAction("fetchCartStatistics");
+
   try {
     dispatch(setLoading(true));
 
@@ -422,6 +476,7 @@ export const fetchCartStatistics = createAsyncThunk<
       throw new Error(response.message || "Failed to fetch cart statistics");
     }
 
+    logThunkSuccess("fetchCartStatistics", response.data);
     return response.data!;
   } catch (error: any) {
     const errorMessage =
@@ -429,6 +484,7 @@ export const fetchCartStatistics = createAsyncThunk<
       error.message ||
       "Failed to fetch cart statistics";
     dispatch(setError(errorMessage));
+    logThunkError("fetchCartStatistics", errorMessage);
     return rejectWithValue(errorMessage);
   } finally {
     dispatch(setLoading(false));
@@ -447,6 +503,7 @@ export const refreshCart = createAsyncThunk<
   string,
   { rejectValue: string }
 >("cart/refreshCart", async (userId: string, { dispatch }) => {
+  logThunkAction("refreshCart", { userId });
   return dispatch(fetchCart(userId)).unwrap();
 });
 
@@ -456,6 +513,8 @@ export const refreshCart = createAsyncThunk<
 export const syncCart = createAsyncThunk<Cart, string, { rejectValue: string }>(
   "cart/syncCart",
   async (userId: string, { dispatch }) => {
+    logThunkAction("syncCart", { userId });
+
     try {
       // First validate the cart
       const validationResult = await dispatch(
@@ -478,5 +537,3 @@ export const syncCart = createAsyncThunk<Cart, string, { rejectValue: string }>(
 // ==========================================
 // EXPORT ALL THUNKS
 // ==========================================
-
-
