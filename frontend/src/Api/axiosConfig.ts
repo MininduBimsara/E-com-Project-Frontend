@@ -14,15 +14,32 @@ const createAxiosInstance = (
     ...additionalConfig,
   });
 
-  // Request interceptor to add auth token if available
+  // Request interceptor for cookie-based authentication
   instance.interceptors.request.use(
     (config) => {
-      // Add auth token from localStorage/sessionStorage if available
-      const token =
+      console.log("🔐 [Axios Interceptor] Request URL:", config.url);
+      console.log(
+        "🔐 [Axios Interceptor] withCredentials:",
+        config.withCredentials
+      );
+
+      // For cookie-based auth, we don't need to manually add Authorization headers
+      // The withCredentials: true setting will automatically send cookies
+      // But we can check if we have any stored tokens as fallback
+      const storedToken =
         localStorage.getItem("token") || sessionStorage.getItem("token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+
+      if (storedToken) {
+        console.log(
+          "🔐 [Axios Interceptor] Found stored token, adding Authorization header"
+        );
+        config.headers.Authorization = `Bearer ${storedToken}`;
+      } else {
+        console.log(
+          "🔐 [Axios Interceptor] No stored token - relying on cookies for authentication"
+        );
       }
+
       return config;
     },
     (error) => Promise.reject(error)
@@ -34,20 +51,26 @@ const createAxiosInstance = (
     (error) => {
       // Handle 401 Unauthorized errors globally
       if (error.response?.status === 401) {
-        // Clear stored tokens
+        // Clear stored tokens (fallback)
         localStorage.removeItem("token");
         sessionStorage.removeItem("token");
 
-        // Redirect to login page (you can customize this based on your routing)
-        if (window.location.pathname.startsWith("/admin")) {
-          window.location.href = "/admin/login";
-        } else {
-          window.location.href = "/login";
-        }
+        console.log(
+          "🔐 [Axios Interceptor] 401 Unauthorized - authentication failed"
+        );
+        console.log(
+          "🔐 [Axios Interceptor] Stored tokens cleared, cookies should be handled by backend"
+        );
+
+        // Don't redirect automatically - let components handle auth state
+        // The verifyAuth thunk will handle setting isAuthenticated to false
       }
 
       // Log errors for debugging
-      console.error("API Error:", error.response?.data || error.message);
+      console.error(
+        "❌ [Axios Interceptor] API Error:",
+        error.response?.data || error.message
+      );
 
       return Promise.reject(error);
     }

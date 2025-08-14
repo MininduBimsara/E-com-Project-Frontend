@@ -17,7 +17,7 @@ import {
   ArrowRight,
   Heart
 } from 'lucide-react';
-import { useCart } from '../../../Context/CartContext';
+import { useCart } from '../../../hooks/useCart';
 
 interface CartSidebarProps {
   onCheckout?: () => void;

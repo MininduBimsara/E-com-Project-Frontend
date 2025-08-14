@@ -14,6 +14,8 @@ import {
   RotateCcw,
   Loader2,
 } from "lucide-react";
+import { useCart } from "../../../hooks/useCart";
+import toast from "react-hot-toast";
 
 interface Product {
   id: string;
@@ -51,6 +53,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  
+  // Add cart context
+  const { addItem } = useCart();
 
   // Reset state when product changes
   React.useEffect(() => {
@@ -67,6 +72,22 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
   const handleImageError = (imageUrl: string) => {
     setImageErrors((prev) => new Set([...prev, imageUrl]));
+  };
+
+  // Add handleAddToCart function
+  const handleAddToCart = () => {
+    if (product && product.inStock) {
+      addItem(product, quantity);
+      toast.success(`${quantity}x ${product.name} added to cart!`, {
+        duration: 3000,
+        style: {
+          background: "rgba(34, 197, 94, 0.9)",
+          color: "white",
+          borderRadius: "12px",
+          fontWeight: "300",
+        },
+      });
+    }
   };
 
   const getFallbackImage = (category?: string) => {
@@ -106,8 +127,6 @@ const getImageSrc = (
   const gatewayUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
   return `${gatewayUrl}/api/products/product-images/${cleanFilename}`;
 };
-
-
 
   const modalVariants = {
     hidden: {
@@ -431,6 +450,7 @@ const getImageSrc = (
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       disabled={!product.inStock}
+                      onClick={handleAddToCart} // Add the click handler here
                       className={`flex-1 py-3 font-light tracking-[0.1em] text-sm transition-all duration-500 flex items-center justify-center ${
                         product.inStock
                           ? "bg-green-600 text-white hover:bg-green-700"

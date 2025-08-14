@@ -1,6 +1,23 @@
 // types/cart.ts
 
 /**
+ * Represents a product that can be added to cart
+ */
+export interface Product {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  originalPrice?: number;
+  images: string[];
+  inStock: boolean;
+  ecoLabel?: string;
+  carbonFootprint?: number;
+  stock?: number;
+  isActive?: boolean;
+}
+
+/**
  * Represents a single item in the shopping cart
  * This interface defines what data each cart item must have
  */
@@ -31,7 +48,7 @@ export interface CartContextType {
   totalCarbonFootprint: number; // Total environmental impact
 
   // Cart Actions (functions to modify the cart)
-  addItem: (product: any, quantity?: number) => void;
+  addItem: (product: Product, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;

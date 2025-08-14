@@ -17,7 +17,7 @@ import {
   Shield,
 } from "lucide-react";
 import AuthModal from "../../Pages/Common/AuthForm";
-import { useCart } from "../../Context/CartContext";
+import { useCart } from "../../hooks/useCart";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -136,12 +136,12 @@ function Header() {
   };
 
   // Debug logging - Remove this in production
-  console.log("NavBar Debug:", {
-    isAuthenticated,
-    user,
-    loading,
-    userName: user?.name || user?.firstName || user?.username || "",
-  });
+  // console.log("NavBar Debug:", {
+  //   isAuthenticated,
+  //   user,
+  //   loading,
+  //   userName: user?.name || user?.firstName || user?.username || "",
+  // });
 
   return (
     <>

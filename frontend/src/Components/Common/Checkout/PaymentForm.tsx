@@ -15,7 +15,7 @@ import {
   capturePayPalPayment,
 } from "../../../Redux/Thunks/paymentThunks";
 import { createOrder } from "../../../Redux/Thunks/orderThunks";
-import { useCart } from "../../../Context/CartContext";
+import { useCart } from "../../../hooks/useCart";
 import type { AppDispatch, RootState } from "../../../Redux/Store/store";
 import type { FormData } from "../../../Types/checkout";
 
