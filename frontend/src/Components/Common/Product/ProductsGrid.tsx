@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useCart } from "../../../hooks/useCart";
 import toast from "react-hot-toast";
+import { useAppSelector } from "../../../Redux/Store/hook";
+import { useAppDispatch } from "../../../Redux/Store/hook";
 
 interface Product {
   id: string;
@@ -95,6 +97,7 @@ const getImageSrc = (product: Product) => {
   return `${gatewayUrl}/api/products/product-images/${cleanFilename}`;
 };
 
+const { isAuthenticated } = useAppSelector((state) => state.user);
 
 
   const handleProductViewClick = (e: React.MouseEvent, product: Product) => {
@@ -107,6 +110,19 @@ const getImageSrc = (product: Product) => {
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!isAuthenticated) {
+      toast.error("Please log in to add items to your cart", {
+        duration: 4000,
+        style: {
+          background: "rgba(239, 68, 68, 0.9)",
+          color: "white",
+          borderRadius: "12px",
+          fontWeight: "300",
+        },
+      });
+      return;
+    }
 
     if (product.inStock) {
       addItem(product, 1);

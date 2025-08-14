@@ -136,12 +136,12 @@ function Header() {
   };
 
   // Debug logging - Remove this in production
-  console.log("NavBar Debug:", {
-    isAuthenticated,
-    user,
-    loading,
-    userName: user?.name || user?.firstName || user?.username || "",
-  });
+  // console.log("NavBar Debug:", {
+  //   isAuthenticated,
+  //   user,
+  //   loading,
+  //   userName: user?.name || user?.firstName || user?.username || "",
+  // });
 
   return (
     <>
