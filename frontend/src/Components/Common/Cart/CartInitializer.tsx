@@ -11,36 +11,36 @@ export default function CartInitializer() {
   const cart = useAppSelector((state) => state.cart.currentCart);
   const lastFetched = useAppSelector((state) => state.cart.lastFetched);
 
-  console.log("🔄 [CartInitializer] Component rendered");
-  console.log("🔄 [CartInitializer] Auth state:", {
-    isAuthenticated,
-    authLoading,
-    user: !!user,
-  });
-  console.log("🔄 [CartInitializer] User ID:", user?.id || user?._id);
+  // console.log("🔄 [CartInitializer] Component rendered");
+  // console.log("🔄 [CartInitializer] Auth state:", {
+  //   isAuthenticated,
+  //   authLoading,
+  //   user: !!user,
+  // });
+  // console.log("🔄 [CartInitializer] User ID:", user?.id || user?._id);
 
   useEffect(() => {
-    console.log("🔄 [CartInitializer] useEffect triggered");
+   // console.log("🔄 [CartInitializer] useEffect triggered");
     const userId = user?.id || user?._id;
 
-    console.log("🔄 [CartInitializer] Conditions check:", {
-      isAuthenticated,
-      userId: userId,
-      hasCart: !!cart,
-      authLoading, // Add this to debug
-    });
+    // console.log("🔄 [CartInitializer] Conditions check:", {
+    //   isAuthenticated,
+    //   userId: userId,
+    //   hasCart: !!cart,
+    //   authLoading, // Add this to debug
+    // });
 
     // Wait for auth loading to complete, then fetch cart if authenticated
     if (!authLoading && isAuthenticated && userId && !cart) {
-      console.log("✅ [CartInitializer] Fetching cart for user:", userId);
+      //console.log("✅ [CartInitializer] Fetching cart for user:", userId);
       dispatch(fetchCart(userId));
     } else {
-      console.log("⏭️ [CartInitializer] Skipping cart fetch:", {
-        authLoading: authLoading ? "still loading" : "loaded",
-        isAuthenticated: isAuthenticated ? "yes" : "no",
-        userId: userId ? "present" : "missing",
-        hasCart: cart ? "yes" : "no",
-      });
+      // console.log("⏭️ [CartInitializer] Skipping cart fetch:", {
+      //   authLoading: authLoading ? "still loading" : "loaded",
+      //   isAuthenticated: isAuthenticated ? "yes" : "no",
+      //   userId: userId ? "present" : "missing",
+      //   hasCart: cart ? "yes" : "no",
+      // });
     }
   }, [dispatch, isAuthenticated, user?.id, user?._id, cart, authLoading]); // Add authLoading to dependencies
 
@@ -55,7 +55,7 @@ export default function CartInitializer() {
       const fiveMinutes = 5 * 60 * 1000;
 
       if (now - lastFetch > fiveMinutes) {
-        console.log("🔄 [CartInitializer] Refreshing cart data...");
+      //  console.log("🔄 [CartInitializer] Refreshing cart data...");
         dispatch(fetchCart(userId));
       }
     }, 5 * 60 * 1000);

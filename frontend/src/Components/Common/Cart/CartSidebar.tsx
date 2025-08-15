@@ -2,8 +2,9 @@ interface CartSidebarProps {
   onCheckout?: () => void;
 }
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   Plus,
@@ -15,9 +16,10 @@ import {
   Truck,
   Shield,
   ArrowRight,
-  Heart
-} from 'lucide-react';
-import { useCart } from '../../../hooks/useCart';
+  Heart,
+} from "lucide-react";
+import { useCart } from "../../../hooks/useCart";
+import { useAppSelector } from "../../../Redux/Store/hook";
 
 interface CartSidebarProps {
   onCheckout?: () => void;
@@ -25,6 +27,7 @@ interface CartSidebarProps {
 
 // NO React.FC - using regular function declaration
 function CartSidebar({ onCheckout }: CartSidebarProps) {
+  const navigate = useNavigate();
   const {
     items,
     isOpen,
@@ -34,69 +37,126 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
     updateQuantity,
     removeItem,
     clearCart,
-    closeCart
+    closeCart,
   } = useCart();
 
+  // Get user authentication state
+  const { user, isAuthenticated } = useAppSelector((state) => state.user);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   const handleImageError = (productId: string) => {
-    setImageErrors(prev => new Set([...prev, productId]));
+    setImageErrors((prev) => new Set([...prev, productId]));
   };
 
   const getImageSrc = (item: any) => {
     if (imageErrors.has(item.id)) {
       // Fallback image based on category
       switch (item.category.toLowerCase()) {
-        case 'cloths':
-        case 'clothing':
-          return 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
-        case 'kitchen':
-          return 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
-        case 'accessories':
-          return 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+        case "cloths":
+        case "clothing":
+          return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+        case "kitchen":
+          return "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+        case "accessories":
+          return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
         default:
-          return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+          return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
       }
     }
-    return item.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+    return (
+      item.image ||
+      "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+    );
   };
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
+    console.log("🛒 [CartSidebar] handleQuantityChange called:", {
+      productId,
+      newQuantity,
+    });
+
     if (newQuantity < 1) {
+      console.log("🛒 [CartSidebar] Removing item (quantity < 1)");
       removeItem(productId);
     } else {
+      console.log("🛒 [CartSidebar] Updating quantity");
       updateQuantity(productId, newQuantity);
     }
   };
 
   const handleCheckout = () => {
+    console.log("🛒 [CartSidebar] handleCheckout called");
+    console.log("🛒 [CartSidebar] Cart state:", {
+      itemCount,
+      totalPrice,
+      items: items.length,
+      isAuthenticated,
+      user: !!user,
+    });
+
+    // Check if cart is empty
+    if (!items || items.length === 0) {
+      console.log("❌ [CartSidebar] Cannot proceed - cart is empty");
+      alert("Your cart is empty. Add some items before checking out.");
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
+      console.log("❌ [CartSidebar] Cannot proceed - user not authenticated");
+      console.log("🛒 [CartSidebar] Redirecting to login");
+
+      // Close cart and redirect to login with return URL
+      closeCart();
+      navigate("/login?returnTo=/checkout");
+      return;
+    }
+
+    console.log("✅ [CartSidebar] All checks passed, proceeding to checkout");
+
+    // If custom onCheckout handler is provided, use it
     if (onCheckout) {
+      console.log("🛒 [CartSidebar] Using custom onCheckout handler");
       onCheckout();
+      return;
+    }
+
+    // Default behavior: navigate to checkout page
+    console.log("🛒 [CartSidebar] Navigating to /checkout");
+    closeCart(); // Close the cart sidebar
+    navigate("/checkout");
+  };
+
+  const handleClearCart = () => {
+    console.log("🛒 [CartSidebar] handleClearCart called");
+    if (window.confirm("Are you sure you want to clear your cart?")) {
+      console.log("🛒 [CartSidebar] User confirmed, clearing cart");
+      clearCart();
     } else {
-      console.log('Proceeding to checkout with items:', items);
+      console.log("🛒 [CartSidebar] User cancelled clear cart");
     }
   };
 
   const sidebarVariants = {
     closed: {
-      x: '100%',
+      x: "100%",
       transition: {
         duration: 0.4,
-        ease: 'easeInOut'
-      }
+        ease: "easeInOut",
+      },
     },
     open: {
       x: 0,
       transition: {
         duration: 0.4,
-        ease: 'easeInOut'
-      }
-    }
+        ease: "easeInOut",
+      },
+    },
   };
 
   const backdropVariants = {
     closed: { opacity: 0 },
-    open: { opacity: 1 }
+    open: { opacity: 1 },
   };
 
   const itemVariants = {
@@ -106,9 +166,9 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
       x: 0,
       transition: {
         delay: index * 0.1,
-        duration: 0.4
-      }
-    })
+        duration: 0.4,
+      },
+    }),
   };
 
   return (
@@ -153,17 +213,26 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
               {/* Cart Summary */}
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600 font-light">
-                  {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                  {itemCount} {itemCount === 1 ? "item" : "items"}
                 </span>
                 {items.length > 0 && (
                   <button
-                    onClick={clearCart}
+                    onClick={handleClearCart}
                     className="text-red-500 hover:text-red-700 font-light tracking-wide text-xs uppercase transition-colors duration-300"
                   >
                     Clear All
                   </button>
                 )}
               </div>
+
+              {/* Authentication Status Debug */}
+              {process.env.NODE_ENV === "development" && (
+                <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+                  <div>Auth: {isAuthenticated ? "✅" : "❌"}</div>
+                  <div>User: {user ? "✅" : "❌"}</div>
+                  <div>Items: {items.length}</div>
+                </div>
+              )}
             </div>
 
             {/* Cart Items */}
@@ -212,7 +281,7 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
                             onError={() => handleImageError(item.id)}
                             className="w-full h-full object-cover"
                           />
-                          
+
                           {/* Eco Badge */}
                           <div className="absolute -top-1 -right-1">
                             <div className="bg-green-600 text-white rounded-full p-1">
@@ -262,7 +331,12 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center border border-gray-200 rounded-lg">
                               <button
-                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    item.id,
+                                    item.quantity - 1
+                                  )
+                                }
                                 className="p-1.5 hover:bg-gray-50 transition-colors"
                               >
                                 <Minus className="w-3 h-3" />
@@ -271,8 +345,15 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
                                 {item.quantity}
                               </span>
                               <button
-                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                disabled={item.quantity >= (item.maxQuantity || 10)}
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    item.id,
+                                    item.quantity + 1
+                                  )
+                                }
+                                disabled={
+                                  item.quantity >= (item.maxQuantity || 10)
+                                }
                                 className="p-1.5 hover:bg-gray-50 transition-colors disabled:opacity-50"
                               >
                                 <Plus className="w-3 h-3" />
@@ -280,7 +361,8 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
                             </div>
 
                             <div className="text-sm font-light text-gray-800">
-                              Rs. {(item.price * item.quantity).toLocaleString()}
+                              Rs.{" "}
+                              {(item.price * item.quantity).toLocaleString()}
                             </div>
                           </div>
 
@@ -311,7 +393,8 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
                     <Heart className="w-4 h-4 text-green-600" />
                   </div>
                   <div className="text-xs text-green-600 font-light">
-                    Total Carbon Footprint: {totalCarbonFootprint.toFixed(1)}kg CO₂
+                    Total Carbon Footprint: {totalCarbonFootprint.toFixed(1)}kg
+                    CO₂
                   </div>
                 </div>
 
@@ -341,15 +424,27 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
                   </span>
                 </div>
 
+                {/* Auth Warning */}
+                {!isAuthenticated && (
+                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-700 font-light">
+                      Please log in to proceed with checkout
+                    </p>
+                  </div>
+                )}
+
                 {/* Checkout Button */}
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleCheckout}
-                  className="w-full bg-green-600 text-white py-4 font-light tracking-[0.1em] text-sm hover:bg-green-700 transition-all duration-500 flex items-center justify-center group"
+                  disabled={items.length === 0}
+                  className="w-full bg-green-600 text-white py-4 font-light tracking-[0.1em] text-sm hover:bg-green-700 transition-all duration-500 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Proceed to Checkout
+                  {!isAuthenticated
+                    ? "Login to Checkout"
+                    : "Proceed to Checkout"}
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                 </motion.button>
 
