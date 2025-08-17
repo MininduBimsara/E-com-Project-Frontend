@@ -84,48 +84,50 @@ function CartSidebar({ onCheckout }: CartSidebarProps) {
     }
   };
 
-  const handleCheckout = () => {
-    console.log("🛒 [CartSidebar] handleCheckout called");
-    console.log("🛒 [CartSidebar] Cart state:", {
-      itemCount,
-      totalPrice,
-      items: items.length,
-      isAuthenticated,
-      user: !!user,
-    });
+const handleCheckout = () => {
+  console.log("🛒 [CartSidebar] handleCheckout called");
+  console.log("🛒 [CartSidebar] Cart state:", {
+    itemCount,
+    totalPrice,
+    items: items.length,
+    isAuthenticated,
+    user: !!user,
+  });
 
-    // Check if cart is empty
-    if (!items || items.length === 0) {
-      console.log("❌ [CartSidebar] Cannot proceed - cart is empty");
-      alert("Your cart is empty. Add some items before checking out.");
-      return;
-    }
+  // Check if cart is empty
+  if (!items || items.length === 0) {
+    console.log("❌ [CartSidebar] Cannot proceed - cart is empty");
+    alert("Your cart is empty. Add some items before checking out.");
+    return;
+  }
 
-    // Check if user is authenticated
-    if (!isAuthenticated || !user) {
-      console.log("❌ [CartSidebar] Cannot proceed - user not authenticated");
-      console.log("🛒 [CartSidebar] Redirecting to login");
+  // Check if user is authenticated
+  if (!isAuthenticated || !user) {
+    console.log("❌ [CartSidebar] Cannot proceed - user not authenticated");
+    console.log("🛒 [CartSidebar] Redirecting to login");
 
-      // Close cart and redirect to login with return URL
-      closeCart();
-      navigate("/login?returnTo=/checkout");
-      return;
-    }
+    // Close cart and redirect to login with return URL
+    closeCart();
+    navigate("/login?returnTo=/checkout");
+    return;
+  }
 
-    console.log("✅ [CartSidebar] All checks passed, proceeding to checkout");
+  console.log("✅ [CartSidebar] All checks passed, proceeding to checkout");
 
-    // If custom onCheckout handler is provided, use it
-    if (onCheckout) {
-      console.log("🛒 [CartSidebar] Using custom onCheckout handler");
-      onCheckout();
-      return;
-    }
+  // ALWAYS close cart before any navigation
+  closeCart();
 
-    // Default behavior: navigate to checkout page
-    console.log("🛒 [CartSidebar] Navigating to /checkout");
-    closeCart(); // Close the cart sidebar
-    navigate("/checkout");
-  };
+  // If custom onCheckout handler is provided, use it
+  if (onCheckout) {
+    console.log("🛒 [CartSidebar] Using custom onCheckout handler");
+    onCheckout();
+    return;
+  }
+
+  // Default behavior: navigate to checkout page
+  console.log("🛒 [CartSidebar] Navigating to /checkout");
+  navigate("/checkout");
+};
 
   const handleClearCart = () => {
     console.log("🛒 [CartSidebar] handleClearCart called");

@@ -1,4 +1,5 @@
-import { createSlice  } from "@reduxjs/toolkit";
+// frontend/src/Redux/Slicers/authSlice.tsx
+import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import {
   loginUser,
@@ -48,10 +49,18 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
+
+        console.log(
+          "✅ [authSlice] Login successful - User role:",
+          action.payload.role
+        );
+        console.log("✅ [authSlice] Full user data:", action.payload);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+
+        console.log("❌ [authSlice] Login failed:", action.payload);
       })
       // Handle registration
       .addCase(registerUser.pending, (state) => {
@@ -62,10 +71,17 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
+
+        console.log(
+          "✅ [authSlice] Registration successful - User role:",
+          action.payload.role
+        );
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+
+        console.log("❌ [authSlice] Registration failed:", action.payload);
       })
       // Handle logout
       .addCase(logoutUser.pending, (state) => {
@@ -76,10 +92,15 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.loading = false;
         state.error = null;
+
+        console.log("✅ [authSlice] Logout successful");
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = (action.payload as string) || "Logout failed. Please try again.";
+        state.error =
+          (action.payload as string) || "Logout failed. Please try again.";
+
+        console.log("❌ [authSlice] Logout failed:", action.payload);
       })
       // Handle auth verification
       .addCase(verifyAuth.pending, (state) => {
@@ -90,12 +111,22 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.isAuthenticated = true;
         state.error = null;
+
+        console.log(
+          "✅ [authSlice] Auth verification successful - User role:",
+          action.payload.role
+        );
+        console.log("✅ [authSlice] Verified user data:", action.payload);
       })
       .addCase(verifyAuth.rejected, (state) => {
         state.loading = false;
         state.user = null;
         state.isAuthenticated = false;
         state.error = null;
+
+        console.log(
+          "ℹ️ [authSlice] Auth verification failed - User not logged in"
+        );
       });
   },
 });

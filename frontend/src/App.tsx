@@ -5,7 +5,10 @@ import {
   Route,
   Routes,
   useNavigate,
+  Navigate,
 } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "./Redux/Store/store";
 
 import Home from "./Pages/Common/HomePage";
 import About from "./Pages/Common/About";
@@ -28,6 +31,52 @@ import AdminDashboard from "./Pages/Admin/AdminDashboard";
 
 import { useAppDispatch } from "./Redux/Store/hook";
 import { verifyAuth } from "./Redux/Thunks/authThunks";
+
+// Protected Route Component for Admin
+const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { user, isAuthenticated, loading } = useSelector(
+    (state: RootState) => state.user
+  );
+
+  console.log("🔍 [ProtectedAdminRoute] Route access check:", {
+    isAuthenticated,
+    userRole: user?.role,
+    loading,
+    user: user
+      ? { id: user.id, username: user.username, role: user.role }
+      : null,
+  });
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-25 to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-3 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-light tracking-wide">
+            Checking permissions...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is authenticated and has admin role
+  const isAdmin =
+    isAuthenticated &&
+    user &&
+    (user.role === "admin" || user.role === "super_admin");
+
+  if (!isAdmin) {
+    console.log("❌ [ProtectedAdminRoute] Access denied - redirecting to home");
+    return <Navigate to="/" replace />;
+  }
+
+  console.log("✅ [ProtectedAdminRoute] Access granted to admin dashboard");
+  return <>{children}</>;
+};
 
 // Create a wrapper component to use useNavigate inside Router context
 function AppContent() {
@@ -58,8 +107,26 @@ function AppContent() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/payment-flow" element={<PaymentFlowDocumentation />} />
           <Route path="/cart-flow" element={<CartFlowDiagrams />} />
-          {/* Add more routes as needed */}
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+          {/* Protected Admin Routes */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          {/* Add more admin routes here if needed */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
+            }
+          />
         </Routes>
       </div>
 
