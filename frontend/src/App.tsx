@@ -32,7 +32,7 @@ import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import { useAppDispatch } from "./Redux/Store/hook";
 import { verifyAuth } from "./Redux/Thunks/authThunks";
 
-// Protected Route Component for Admin
+// Protected Route Component for Admin - SIMPLIFIED
 const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -40,17 +40,17 @@ const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({
     (state: RootState) => state.user
   );
 
-  console.log("🔍 [ProtectedAdminRoute] Route access check:", {
+  console.log("🔍 [ProtectedAdminRoute] Current state:", {
     isAuthenticated,
     userRole: user?.role,
     loading,
-    user: user
-      ? { id: user.id, username: user.username, role: user.role }
-      : null,
+    hasUser: !!user,
+    userId: user?.id,
   });
 
   // Show loading while checking authentication
   if (loading) {
+    console.log("⏳ [ProtectedAdminRoute] Loading authentication...");
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-25 to-teal-50 flex items-center justify-center">
         <div className="text-center">
@@ -69,6 +69,13 @@ const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({
     user &&
     (user.role === "admin" || user.role === "super_admin");
 
+  console.log("🔍 [ProtectedAdminRoute] Admin check result:", {
+    isAdmin,
+    isAuthenticated,
+    userRole: user?.role,
+    decision: isAdmin ? "ALLOW" : "REDIRECT",
+  });
+
   if (!isAdmin) {
     console.log("❌ [ProtectedAdminRoute] Access denied - redirecting to home");
     return <Navigate to="/" replace />;
@@ -85,7 +92,7 @@ function AppContent() {
 
   // Verify auth on app startup
   useEffect(() => {
-    console.log("🚀 [App] Verifying authentication on startup");
+    console.log("🚀 [AppContent] Verifying authentication on startup");
     dispatch(verifyAuth());
   }, [dispatch]);
 

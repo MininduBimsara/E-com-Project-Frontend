@@ -18,12 +18,19 @@ export const loginUser = createAsyncThunk<
 
     const user = await authApi.login(credentials);
 
-    console.log("🔍 [loginUser] API response:", {
+    console.log("🔍 [loginUser] API response received:", {
       userId: user.id,
       username: user.username,
       email: user.email,
       role: user.role,
+      hasProfileImage: !!user.profileImage,
     });
+
+    // Verify the user object has the required fields
+    if (!user.id || !user.email || !user.role) {
+      console.error("❌ [loginUser] Invalid user object received:", user);
+      throw new Error("Invalid user data received from server");
+    }
 
     return user;
   } catch (error: any) {
@@ -49,6 +56,12 @@ export const registerUser = createAsyncThunk<
       email: user.email,
       role: user.role,
     });
+
+    // Verify the user object has the required fields
+    if (!user.id || !user.email || !user.role) {
+      console.error("❌ [registerUser] Invalid user object received:", user);
+      throw new Error("Invalid user data received from server");
+    }
 
     return user;
   } catch (error: any) {
@@ -81,7 +94,7 @@ export const verifyAuth = createAsyncThunk<User, void, { rejectValue: string }>(
   "auth/verifyAuth",
   async (_, { rejectWithValue }) => {
     try {
-      console.log("🔍 [verifyAuth] Verifying authentication");
+      console.log("🔍 [verifyAuth] Verifying authentication...");
 
       const user = await authApi.verifyAuth();
 
@@ -90,12 +103,19 @@ export const verifyAuth = createAsyncThunk<User, void, { rejectValue: string }>(
         username: user.username,
         email: user.email,
         role: user.role,
+        hasProfileImage: !!user.profileImage,
       });
+
+      // Verify the user object has the required fields
+      if (!user.id || !user.email || !user.role) {
+        console.error("❌ [verifyAuth] Invalid user object received:", user);
+        throw new Error("Invalid user data received from server");
+      }
 
       return user;
     } catch (error: any) {
       console.log(
-        "ℹ️ [verifyAuth] Auth verification failed (user not logged in):",
+        "ℹ️ [verifyAuth] Auth verification failed (normal if not logged in):",
         error.message
       );
       return rejectWithValue(error.message);

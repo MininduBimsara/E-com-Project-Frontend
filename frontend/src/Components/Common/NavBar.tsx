@@ -55,16 +55,22 @@ function Header() {
     return currentPath.startsWith(href);
   };
 
-  // Check if user is admin
+  // Check if user is admin with enhanced logging
   const isAdmin = () => {
     const userRole = user?.role;
     const isAdminRole = userRole === "admin" || userRole === "super_admin";
 
-    console.log("🔍 [NavBar] Role check:", {
+    console.log("🔍 [NavBar.isAdmin] Role check:", {
       userRole,
       isAdminRole,
+      isAuthenticated,
       user: user
-        ? { id: user.id, username: user.username, role: user.role }
+        ? {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            email: user.email,
+          }
         : null,
     });
 
@@ -73,7 +79,7 @@ function Header() {
 
   // Verify authentication on component mount
   useEffect(() => {
-    console.log("🚀 [NavBar] Verifying authentication on startup");
+    console.log("🚀 [NavBar] Verifying authentication on component mount");
     dispatch(verifyAuth());
   }, [dispatch]);
 
@@ -81,6 +87,7 @@ function Header() {
   useEffect(() => {
     console.log("🔍 [NavBar] User state changed:", {
       isAuthenticated,
+      userRole: user?.role,
       user: user
         ? {
             id: user.id,
@@ -133,10 +140,12 @@ function Header() {
   };
 
   const handleLoginClick = () => {
+    console.log("🔍 [NavBar] Login button clicked");
     setIsAuthModalOpen(true);
   };
 
   const handleAuthSuccess = (userData: any) => {
+    console.log("🔍 [NavBar] Auth success callback triggered:", userData);
     setIsAuthModalOpen(false);
     // Force a re-verification to update the state immediately
     dispatch(verifyAuth());
@@ -153,23 +162,34 @@ function Header() {
       setIsUserMenuOpen(false);
       // Redirect to home page after logout
       navigate("/");
-      console.log("✅ [NavBar] Logout successful");
+      console.log("✅ [NavBar] Logout successful, navigated to home");
     } catch (error) {
       console.error("❌ [NavBar] Logout failed:", error);
     }
   };
 
   const handleProfileClick = () => {
+    console.log("🔍 [NavBar] Profile clicked");
     setIsUserMenuOpen(false);
     // Navigate to profile page
     navigate("/profile");
   };
 
   const handleAdminDashboardClick = () => {
-    console.log("🔍 [NavBar] Admin Dashboard clicked");
+    console.log("🔍 [NavBar] Admin Dashboard clicked - Current state:", {
+      isAuthenticated,
+      userRole: user?.role,
+      isAdmin: isAdmin(),
+      currentPath,
+    });
+
     setIsUserMenuOpen(false);
-    // Navigate to admin dashboard
-    navigate("/admin/dashboard");
+
+    // Add a small delay to ensure state is stable
+    setTimeout(() => {
+      console.log("🔍 [NavBar] Navigating to admin dashboard");
+      navigate("/admin/dashboard");
+    }, 100);
   };
 
   return (

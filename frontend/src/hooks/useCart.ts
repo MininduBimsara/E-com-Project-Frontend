@@ -29,13 +29,13 @@ export function useCart(): CartContextType {
   const isOpen = useAppSelector((state) => state.cart.isOpen);
   const { user, isAuthenticated } = useAppSelector((state) => state.user);
 
-  console.log("🪝 [useCart] Hook called with state:", {
-    hasCart: !!cart,
-    cartItems: cart?.items?.length || 0,
-    isOpen,
-    isAuthenticated,
-    userId: user?.id || user?._id,
-  });
+  // console.log("🪝 [useCart] Hook called with state:", {
+  //   hasCart: !!cart,
+  //   cartItems: cart?.items?.length || 0,
+  //   isOpen,
+  //   isAuthenticated,
+  //   userId: user?.id || user?._id,
+  // });
 
   // Transform Redux cart data to match the old context interface
   const items: CartItem[] =
@@ -69,12 +69,12 @@ export function useCart(): CartContextType {
     0
   );
 
-  console.log("🪝 [useCart] Computed values:", {
-    itemCount,
-    totalPrice,
-    totalCarbonFootprint,
-    itemsLength: items.length,
-  });
+  // console.log("🪝 [useCart] Computed values:", {
+  //   itemCount,
+  //   totalPrice,
+  //   totalCarbonFootprint,
+  //   itemsLength: items.length,
+  // });
 
   // Cart actions
   const addItem = useCallback(
@@ -87,14 +87,14 @@ export function useCart(): CartContextType {
         },
         quantity,
       });
-      console.log("🪝 [useCart] Current user state:", {
-        isAuthenticated,
-        user: !!user,
-        userId: user?.id || user?._id,
-      });
+      // console.log("🪝 [useCart] Current user state:", {
+      //   isAuthenticated,
+      //   user: !!user,
+      //   userId: user?.id || user?._id,
+      // });
 
       if (!isAuthenticated || !user) {
-        console.error("❌ [useCart] Cannot add item - user not authenticated");
+        // console.error("❌ [useCart] Cannot add item - user not authenticated");
         return;
       }
 
@@ -102,17 +102,17 @@ export function useCart(): CartContextType {
       const userId = user?.id || user?._id;
 
       if (!userId) {
-        console.error(
-          "❌ [useCart] User not authenticated - cannot add item to cart"
-        );
-        console.error("❌ [useCart] User object:", user);
+        // console.error(
+        //   "❌ [useCart] User not authenticated - cannot add item to cart"
+        // );
+        // console.error("❌ [useCart] User object:", user);
         return;
       }
 
-      console.log(
-        "✅ [useCart] User authenticated, dispatching addToCart with userId:",
-        userId
-      );
+      // console.log(
+      //   "✅ [useCart] User authenticated, dispatching addToCart with userId:",
+      //   userId
+      // );
 
       dispatch(
         addToCart({
@@ -122,10 +122,10 @@ export function useCart(): CartContextType {
         })
       )
         .then((result) => {
-          console.log("🪝 [useCart] addToCart result:", result);
+          // console.log("🪝 [useCart] addToCart result:", result);
         })
         .catch((error) => {
-          console.error("🪝 [useCart] addToCart error:", error);
+          // console.error("🪝 [useCart] addToCart error:", error);
         });
     },
     [dispatch, user?.id, user?._id, isAuthenticated]
@@ -133,17 +133,17 @@ export function useCart(): CartContextType {
 
   const removeItem = useCallback(
     (productId: string) => {
-      console.log("🪝 [useCart] removeItem called with productId:", productId);
+      // console.log("🪝 [useCart] removeItem called with productId:", productId);
 
       const userId = user?.id || user?._id;
       if (!userId) {
-        console.error(
-          "❌ [useCart] User not authenticated - cannot remove item"
-        );
+        // console.error(
+        //   "❌ [useCart] User not authenticated - cannot remove item"
+        // );
         return;
       }
 
-      console.log("🪝 [useCart] Dispatching removeFromCart");
+      // console.log("🪝 [useCart] Dispatching removeFromCart");
       dispatch(
         removeFromCart({
           userId: userId,
@@ -151,10 +151,10 @@ export function useCart(): CartContextType {
         })
       )
         .then((result) => {
-          console.log("🪝 [useCart] removeFromCart result:", result);
+          // console.log("🪝 [useCart] removeFromCart result:", result);
         })
         .catch((error) => {
-          console.error("🪝 [useCart] removeFromCart error:", error);
+          // console.error("🪝 [useCart] removeFromCart error:", error);
         });
     },
     [dispatch, user?.id, user?._id]
@@ -162,21 +162,21 @@ export function useCart(): CartContextType {
 
   const updateQuantity = useCallback(
     (productId: string, quantity: number) => {
-      console.log("🪝 [useCart] updateQuantity called:", {
-        productId,
-        quantity,
-      });
+        // console.log("🪝 [useCart] updateQuantity called:", {
+        //   productId,
+        //   quantity,
+        // });
 
       const userId = user?.id || user?._id;
       if (!userId) {
-        console.error(
-          "❌ [useCart] User not authenticated - cannot update quantity"
-        );
+        // console.error(
+        //   "❌ [useCart] User not authenticated - cannot update quantity"
+        // );
         return;
       }
 
       if (quantity <= 0) {
-        console.log("🪝 [useCart] Quantity <= 0, removing item instead");
+        // console.log("🪝 [useCart] Quantity <= 0, removing item instead");
         dispatch(
           removeFromCart({
             userId: userId,
@@ -184,7 +184,7 @@ export function useCart(): CartContextType {
           })
         );
       } else {
-        console.log("🪝 [useCart] Dispatching updateCartItemQuantity");
+        // console.log("🪝 [useCart] Dispatching updateCartItemQuantity");
         dispatch(
           updateCartItemQuantity({
             userId: userId,
@@ -193,10 +193,10 @@ export function useCart(): CartContextType {
           })
         )
           .then((result) => {
-            console.log("🪝 [useCart] updateCartItemQuantity result:", result);
+            // console.log("🪝 [useCart] updateCartItemQuantity result:", result);
           })
           .catch((error) => {
-            console.error("🪝 [useCart] updateCartItemQuantity error:", error);
+           // console.error("🪝 [useCart] updateCartItemQuantity error:", error);
           });
       }
     },
@@ -204,31 +204,31 @@ export function useCart(): CartContextType {
   );
 
   const clearCart = useCallback(() => {
-    console.log("🪝 [useCart] clearCart called");
+    // console.log("🪝 [useCart] clearCart called");
 
     const userId = user?.id || user?._id;
     if (!userId) {
-      console.error("❌ [useCart] User not authenticated - cannot clear cart");
+      // console.error("❌ [useCart] User not authenticated - cannot clear cart");
       return;
     }
 
     console.log("🪝 [useCart] Dispatching clearCartItems");
     dispatch(clearCartItems(userId))
       .then((result) => {
-        console.log("🪝 [useCart] clearCartItems result:", result);
+        // console.log("🪝 [useCart] clearCartItems result:", result);
       })
       .catch((error) => {
-        console.error("🪝 [useCart] clearCartItems error:", error);
+        // console.error("🪝 [useCart] clearCartItems error:", error);
       });
   }, [dispatch, user?.id, user?._id]);
 
   const openCartAction = useCallback(() => {
-    console.log("🪝 [useCart] openCart called");
+    // console.log("🪝 [useCart] openCart called");
     dispatch(openCart());
   }, [dispatch]);
 
   const closeCartAction = useCallback(() => {
-    console.log("🪝 [useCart] closeCart called");
+    // console.log("🪝 [useCart] closeCart called");
     dispatch(closeCart());
   }, [dispatch]);
 
@@ -246,12 +246,12 @@ export function useCart(): CartContextType {
     closeCart: closeCartAction,
   };
 
-  console.log("🪝 [useCart] Returning hook value:", {
-    itemsCount: hookReturnValue.items.length,
-    isOpen: hookReturnValue.isOpen,
-    itemCount: hookReturnValue.itemCount,
-    totalPrice: hookReturnValue.totalPrice,
-  });
+  // console.log("🪝 [useCart] Returning hook value:", {
+  //   itemsCount: hookReturnValue.items.length,
+  //   isOpen: hookReturnValue.isOpen,
+  //   itemCount: hookReturnValue.itemCount,
+  //   totalPrice: hookReturnValue.totalPrice,
+  // });
 
   return hookReturnValue;
 }
