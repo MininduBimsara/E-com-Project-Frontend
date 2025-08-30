@@ -55,10 +55,51 @@ function Header() {
     return currentPath.startsWith(href);
   };
 
+  // Check if user is admin with enhanced logging
+  const isAdmin = () => {
+    const userRole = user?.role;
+    const isAdminRole = userRole === "admin" || userRole === "super_admin";
+
+    console.log("🔍 [NavBar.isAdmin] Role check:", {
+      userRole,
+      isAdminRole,
+      isAuthenticated,
+      user: user
+        ? {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            email: user.email,
+          }
+        : null,
+    });
+
+    return isAdminRole;
+  };
+
   // Verify authentication on component mount
   useEffect(() => {
+    console.log("🚀 [NavBar] Verifying authentication on component mount");
     dispatch(verifyAuth());
   }, [dispatch]);
+
+  // Debug user state changes
+  useEffect(() => {
+    console.log("🔍 [NavBar] User state changed:", {
+      isAuthenticated,
+      userRole: user?.role,
+      user: user
+        ? {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+          }
+        : null,
+      loading,
+      error,
+    });
+  }, [user, isAuthenticated, loading, error]);
 
   // Handle scroll effect
   useEffect(() => {
@@ -99,10 +140,12 @@ function Header() {
   };
 
   const handleLoginClick = () => {
+    console.log("🔍 [NavBar] Login button clicked");
     setIsAuthModalOpen(true);
   };
 
   const handleAuthSuccess = (userData: any) => {
+    console.log("🔍 [NavBar] Auth success callback triggered:", userData);
     setIsAuthModalOpen(false);
     // Force a re-verification to update the state immediately
     dispatch(verifyAuth());
@@ -114,34 +157,40 @@ function Header() {
 
   const handleLogoutClick = async () => {
     try {
+      console.log("🔍 [NavBar] Logout initiated");
       await dispatch(logoutUser()).unwrap();
       setIsUserMenuOpen(false);
       // Redirect to home page after logout
       navigate("/");
+      console.log("✅ [NavBar] Logout successful, navigated to home");
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("❌ [NavBar] Logout failed:", error);
     }
   };
 
   const handleProfileClick = () => {
+    console.log("🔍 [NavBar] Profile clicked");
     setIsUserMenuOpen(false);
     // Navigate to profile page
     navigate("/profile");
   };
 
   const handleAdminDashboardClick = () => {
-    setIsUserMenuOpen(false);
-    // Navigate to admin dashboard
-    navigate("/admin/dashboard");
-  };
+    console.log("🔍 [NavBar] Admin Dashboard clicked - Current state:", {
+      isAuthenticated,
+      userRole: user?.role,
+      isAdmin: isAdmin(),
+      currentPath,
+    });
 
-  // Debug logging - Remove this in production
-  // console.log("NavBar Debug:", {
-  //   isAuthenticated,
-  //   user,
-  //   loading,
-  //   userName: user?.name || user?.firstName || user?.username || "",
-  // });
+    setIsUserMenuOpen(false);
+
+    // Add a small delay to ensure state is stable
+    setTimeout(() => {
+      console.log("🔍 [NavBar] Navigating to admin dashboard");
+      navigate("/admin/dashboard");
+    }, 100);
+  };
 
   return (
     <>
@@ -310,7 +359,7 @@ function Header() {
                   </span>
                 </div>
               ) : isAuthenticated && user ? (
-                // User Menu (when logged in) - Fixed condition
+                // User Menu (when logged in)
                 <div className="relative user-menu">
                   <motion.button
                     onClick={toggleUserMenu}
@@ -318,9 +367,13 @@ function Header() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    {user.avatar || user.profilePicture ? (
+                    {user.avatar || user.profilePicture || user.profileImage ? (
                       <img
-                        src={user.avatar || user.profilePicture}
+                        src={
+                          user.avatar ||
+                          user.profilePicture ||
+                          user.profileImage
+                        }
                         alt={
                           user.name || user.firstName || user.username || "User"
                         }
@@ -374,8 +427,7 @@ function Header() {
                               user?.username ||
                               "User"}
                           </div>
-                          {(user?.role === "admin" ||
-                            user?.role === "super_admin") && (
+                          {isAdmin() && (
                             <div className="text-xs text-green-600 font-medium tracking-wide mt-1 flex items-center">
                               <Shield className="w-3 h-3 mr-1" />
                               ADMIN
@@ -384,8 +436,7 @@ function Header() {
                         </div>
 
                         {/* Admin Dashboard Button - Only show for admins */}
-                        {(user?.role === "admin" ||
-                          user?.role === "super_admin") && (
+                        {isAdmin() && (
                           <motion.button
                             onClick={handleAdminDashboardClick}
                             className="w-full px-4 py-3 text-left text-sm text-green-700 hover:bg-green-50/50 flex items-center space-x-3 transition-colors duration-200 font-medium"
@@ -491,8 +542,7 @@ function Header() {
                       <div className="px-6 py-2 text-sm font-light text-gray-500">
                         Signed in as{" "}
                         {user.name || user.firstName || user.username || "User"}
-                        {(user?.role === "admin" ||
-                          user?.role === "super_admin") && (
+                        {isAdmin() && (
                           <span className="block text-xs text-green-600 font-medium tracking-wide mt-1">
                             ADMIN ACCESS
                           </span>
@@ -500,8 +550,7 @@ function Header() {
                       </div>
 
                       {/* Mobile Admin Dashboard Button */}
-                      {(user?.role === "admin" ||
-                        user?.role === "super_admin") && (
+                      {isAdmin() && (
                         <motion.button
                           onClick={() => {
                             handleAdminDashboardClick();

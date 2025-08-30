@@ -1,3 +1,4 @@
+// frontend/src/Api/Admin/adminApi.tsx
 import { createAxiosInstance, type AxiosResponse } from "../axiosConfig";
 
 // Admin interfaces
@@ -8,6 +9,7 @@ export interface AdminCredentials {
 
 export interface Admin {
   id: string;
+  _id?: string; // Add MongoDB _id field
   username: string;
   email: string;
   role: string;
@@ -17,6 +19,7 @@ export interface Admin {
 
 export interface AdminLoginResponse {
   admin: Admin;
+  token?: string;
 }
 
 export interface DashboardStats {
@@ -24,39 +27,55 @@ export interface DashboardStats {
   products: number;
   orders: number;
   revenue: number;
+  payments?: number;
+  cartItems?: number;
   status: {
     userService: string;
     productService: string;
     orderService: string;
+    cartService?: string;
+    paymentService?: string;
   };
 }
 
 export interface User {
   id: string;
+  _id?: string; // Add MongoDB _id field
   username: string;
   email: string;
   status: string;
+  role?: string;
   createdAt: string;
   lastLoginAt?: string;
+  orders?: number;
+  totalSpent?: number;
 }
 
 export interface Product {
   id: string;
+  _id?: string; // Add MongoDB _id field
   name: string;
   category: string;
   price: number;
   stock: number;
   status: string;
   createdAt: string;
+  sold?: number;
+  rating?: number;
 }
 
 export interface Order {
   id: string;
+  _id?: string; // Add MongoDB _id field
   userId: string;
   totalAmount: number;
   status: string;
   createdAt: string;
   items: any[];
+  customer?: string;
+  customerEmail?: string;
+  paymentMethod?: string;
+  shippingAddress?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -75,12 +94,27 @@ export interface ApiResponse<T = any> {
   data?: T;
 }
 
-// Base URL using gateway service - according to documentation
+// Base URL using gateway service
 const API_URL =
   import.meta.env.VITE_ADMIN_API_URL || "http://localhost:5000/api/admin";
 
 // Create axios instance using centralized configuration
 const adminApiClient = createAxiosInstance(API_URL);
+
+// Add response interceptor to handle token in cookies
+adminApiClient.interceptors.response.use(
+  (response) => {
+    // Handle token setting from Set-Cookie header if needed
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // Redirect to login on unauthorized
+      window.location.href = "/admin/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Admin API functions
 export const adminApi = {
@@ -91,13 +125,15 @@ export const adminApi = {
         await adminApiClient.post("/login", credentials);
 
       if (response.data.success && response.data.data) {
-        // JWT token is automatically stored in httpOnly cookie by server
         return response.data.data;
       } else {
         throw new Error(response.data.message || "Login failed");
       }
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Login failed");
+      console.error("Login error:", error);
+      throw new Error(
+        error.response?.data?.message || error.message || "Login failed"
+      );
     }
   },
 
@@ -113,8 +149,11 @@ export const adminApi = {
         throw new Error(response.data.message || "Failed to fetch profile");
       }
     } catch (error: any) {
+      console.error("Get profile error:", error);
       throw new Error(
-        error.response?.data?.message || "Failed to fetch profile"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch profile"
       );
     }
   },
@@ -133,8 +172,11 @@ export const adminApi = {
         );
       }
     } catch (error: any) {
+      console.error("Dashboard error:", error);
       throw new Error(
-        error.response?.data?.message || "Failed to fetch dashboard stats"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch dashboard stats"
       );
     }
   },
@@ -157,7 +199,12 @@ export const adminApi = {
         throw new Error(response.data.message || "Failed to fetch users");
       }
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Failed to fetch users");
+      console.error("Get users error:", error);
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch users"
+      );
     }
   },
 
@@ -175,8 +222,11 @@ export const adminApi = {
         );
       }
     } catch (error: any) {
+      console.error("Update user status error:", error);
       throw new Error(
-        error.response?.data?.message || "Failed to update user status"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to update user status"
       );
     }
   },
@@ -200,8 +250,11 @@ export const adminApi = {
         throw new Error(response.data.message || "Failed to fetch products");
       }
     } catch (error: any) {
+      console.error("Get products error:", error);
       throw new Error(
-        error.response?.data?.message || "Failed to fetch products"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch products"
       );
     }
   },
@@ -224,8 +277,11 @@ export const adminApi = {
         throw new Error(response.data.message || "Failed to fetch orders");
       }
     } catch (error: any) {
+      console.error("Get orders error:", error);
       throw new Error(
-        error.response?.data?.message || "Failed to fetch orders"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch orders"
       );
     }
   },
@@ -247,8 +303,11 @@ export const adminApi = {
         );
       }
     } catch (error: any) {
+      console.error("Update order status error:", error);
       throw new Error(
-        error.response?.data?.message || "Failed to update order status"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to update order status"
       );
     }
   },
@@ -257,11 +316,11 @@ export const adminApi = {
   logout: async (): Promise<{ success: boolean }> => {
     try {
       await adminApiClient.post("/logout");
-      // JWT cookie will be automatically cleared by the server
       return { success: true };
     } catch (error: any) {
-      // Even if logout fails, we consider it successful for frontend purposes
-      throw new Error(error.response?.data?.message || "Logout failed");
+      console.error("Logout error:", error);
+      // Consider logout successful even if request fails
+      return { success: true };
     }
   },
 };

@@ -45,8 +45,10 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        console.log("🔍 [AdminDashboard] Verifying admin authentication...");
         // Verify admin authentication first
         await dispatch(verifyAdminAuth()).unwrap();
+        console.log("✅ [AdminDashboard] Admin authentication verified");
 
         // Load dashboard data
         await Promise.all([
@@ -55,10 +57,16 @@ const AdminDashboard: React.FC = () => {
           dispatch(getProducts({ page: 1, limit: 50 })),
           dispatch(getOrders({ page: 1, limit: 50 })),
         ]);
+        console.log("✅ [AdminDashboard] Dashboard data loaded");
       } catch (error) {
-        console.error("Failed to load dashboard data:", error);
-        // Handle authentication error - redirect to login
-        window.location.href = "/admin/login";
+        console.error(
+          "❌ [AdminDashboard] Failed to load dashboard data:",
+          error
+        );
+        console.error(
+          "❌ [AdminDashboard] Admin authentication failed - user not authenticated"
+        );
+        // Just log the error, don't redirect or refresh
       } finally {
         setInitialLoading(false);
       }

@@ -1,6 +1,14 @@
 import "./App.css";
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useNavigate,
+  Navigate,
+} from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "./Redux/Store/store";
 
 import Home from "./Pages/Common/HomePage";
 import About from "./Pages/Common/About";
@@ -24,57 +32,133 @@ import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import { useAppDispatch } from "./Redux/Store/hook";
 import { verifyAuth } from "./Redux/Thunks/authThunks";
 
-function App() {
+// Protected Route Component for Admin - SIMPLIFIED
+const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { user, isAuthenticated, loading } = useSelector(
+    (state: RootState) => state.user
+  );
 
-const dispatch = useAppDispatch(); // Add this
+  console.log("🔍 [ProtectedAdminRoute] Current state:", {
+    isAuthenticated,
+    userRole: user?.role,
+    loading,
+    hasUser: !!user,
+    userId: user?.id,
+  });
 
-// Add this useEffect to verify auth on app startup
-useEffect(() => {
-  console.log("🚀 [App] Verifying authentication on startup");
-  dispatch(verifyAuth());
-}, [dispatch]);
+  // Show loading while checking authentication
+  if (loading) {
+    console.log("⏳ [ProtectedAdminRoute] Loading authentication...");
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-25 to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-3 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-light tracking-wide">
+            Checking permissions...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is authenticated and has admin role
+  const isAdmin =
+    isAuthenticated &&
+    user &&
+    (user.role === "admin" || user.role === "super_admin");
+
+  console.log("🔍 [ProtectedAdminRoute] Admin check result:", {
+    isAdmin,
+    isAuthenticated,
+    userRole: user?.role,
+    decision: isAdmin ? "ALLOW" : "REDIRECT",
+  });
+
+  if (!isAdmin) {
+    console.log("❌ [ProtectedAdminRoute] Access denied - redirecting to home");
+    return <Navigate to="/" replace />;
+  }
+
+  console.log("✅ [ProtectedAdminRoute] Access granted to admin dashboard");
+  return <>{children}</>;
+};
+
+// Create a wrapper component to use useNavigate inside Router context
+function AppContent() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  // Verify auth on app startup
+  useEffect(() => {
+    console.log("🚀 [AppContent] Verifying authentication on startup");
+    dispatch(verifyAuth());
+  }, [dispatch]);
 
   return (
-    <>
-      <Router>
-        <div className="min-h-screen bg-white">
-          {/* Initialize cart when user is authenticated */}
-          <CartInitializer />
+    <div className="min-h-screen bg-white">
+      {/* Initialize cart when user is authenticated */}
+      <CartInitializer />
 
-          {/* Your existing navbar with cart integration */}
-          <Header />
+      {/* Your existing navbar with cart integration */}
+      <Header />
 
-          {/* Main content with proper top margin for fixed navbar */}
-          <div className="pt-20 lg:pt-24">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route
-                path="/payment-flow"
-                element={<PaymentFlowDocumentation />}
-              />
-              <Route path="/cart-flow" element={<CartFlowDiagrams />} />
-              {/* Add more routes as needed */}
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            </Routes>
-          </div>
+      {/* Main content with proper top margin for fixed navbar */}
+      <div className="pt-20 lg:pt-24">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/payment-flow" element={<PaymentFlowDocumentation />} />
+          <Route path="/cart-flow" element={<CartFlowDiagrams />} />
 
-          {/* Cart sidebar - always present, shows when cart is opened */}
-          <CartSidebar
-            onCheckout={() => {
-              // Navigate to checkout page when checkout is clicked
-              window.location.href = "/checkout";
-            }}
+          {/* Protected Admin Routes */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
+            }
           />
 
-          {/* Auth Debugger - only in development */}
-          <AuthDebugger />
-        </div>
-      </Router>
-    </>
+          {/* Add more admin routes here if needed */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
+            }
+          />
+        </Routes>
+      </div>
+
+      {/* Cart sidebar - always present, shows when cart is opened */}
+      <CartSidebar
+        onCheckout={() => {
+          // Use React Router navigation instead of window.location
+          console.log(
+            "🛒 [App] Custom onCheckout called, navigating to /checkout"
+          );
+          navigate("/checkout");
+        }}
+      />
+
+      {/* Auth Debugger - only in development */}
+      <AuthDebugger />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

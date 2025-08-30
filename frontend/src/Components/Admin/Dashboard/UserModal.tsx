@@ -1,10 +1,40 @@
-import React from "react";
+// frontend/src/Components/Admin/Dashboard/UserModal.tsx
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import StatusBadge from "./StatusBadge";
-import { type UserModalProps } from "../../../Types/adminTypes";
+import { type User } from "../../../Api/Admin/adminApi";
 
-const UserModal: React.FC<UserModalProps> = ({ user, onClose }) => {
+interface UserModalProps {
+  user: User;
+  onClose: () => void;
+  onStatusUpdate?: (userId: string, status: string) => void;
+}
+
+const UserModal: React.FC<UserModalProps> = ({
+  user,
+  onClose,
+  onStatusUpdate,
+}) => {
+  const [selectedStatus, setSelectedStatus] = useState(user.status);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleStatusUpdate = async () => {
+    if (!onStatusUpdate || selectedStatus === user.status) return;
+
+    setIsUpdating(true);
+    try {
+      await onStatusUpdate(user.id || user._id || "", selectedStatus);
+      // Update successful - the parent component will handle the UI update
+    } catch (error) {
+      console.error("Failed to update user status:", error);
+      // Reset to original status on error
+      setSelectedStatus(user.status);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -51,7 +81,7 @@ const UserModal: React.FC<UserModalProps> = ({ user, onClose }) => {
           <div>
             <label className="text-sm text-gray-600 font-medium">Role</label>
             <p className="font-medium text-gray-900 mt-1 capitalize">
-              {user.role}
+              {user.role || "customer"}
             </p>
           </div>
           <div>
@@ -129,25 +159,34 @@ const UserModal: React.FC<UserModalProps> = ({ user, onClose }) => {
         </div>
 
         {/* Status Update Section */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <label className="text-sm text-gray-600 font-medium mb-2 block">
-            Update Status
-          </label>
-          <div className="flex space-x-2">
-            <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="banned">Banned</option>
-            </select>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-light"
-            >
-              Update
-            </motion.button>
+        {onStatusUpdate && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <label className="text-sm text-gray-600 font-medium mb-2 block">
+              Update Status
+            </label>
+            <div className="flex space-x-2">
+              <select
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                disabled={isUpdating}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="banned">Banned</option>
+              </select>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleStatusUpdate}
+                disabled={isUpdating || selectedStatus === user.status}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-light disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUpdating ? "Updating..." : "Update"}
+              </motion.button>
+            </div>
           </div>
-        </div>
+        )}
       </motion.div>
     </motion.div>
   );

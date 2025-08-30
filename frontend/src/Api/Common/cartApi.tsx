@@ -1,9 +1,11 @@
-// cartApi.tsx - Updated with correct Vite environment variables
+// cartApi.tsx - Updated with correct Vite environment variables and debugging
 import { createAxiosInstance } from "../axiosConfig";
 
 // Base URL using gateway service - according to documentation
 const API_BASE_URL =
   import.meta.env.VITE_CART_API_URL || "http://localhost:5000/api/cart";
+
+console.log("🛒 [Cart API] Initializing with base URL:", API_BASE_URL);
 
 // Create axios instance using centralized configuration
 const cartApi = createAxiosInstance(API_BASE_URL);
@@ -14,6 +16,7 @@ const cartApi = createAxiosInstance(API_BASE_URL);
 
 const logApiCall = (method: string, url: string, data?: any) => {
   console.log(`🛒 [Cart API] ${method} ${url}`, data ? { data } : "");
+  console.log(`🛒 [Cart API] Full URL: ${API_BASE_URL}${url}`);
 };
 
 const logApiResponse = (method: string, url: string, response: any) => {
@@ -22,6 +25,13 @@ const logApiResponse = (method: string, url: string, response: any) => {
 
 const logApiError = (method: string, url: string, error: any) => {
   console.error(`❌ [Cart API] ${method} ${url} - Error:`, error);
+  console.error(`❌ [Cart API] Error details:`, {
+    message: error.message,
+    status: error.response?.status,
+    data: error.response?.data,
+    url: error.config?.url,
+    method: error.config?.method,
+  });
 };
 
 // ==========================================
@@ -34,14 +44,14 @@ const logApiError = (method: string, url: string, error: any) => {
  */
 export const getCart = async (userId: string) => {
   const url = `/${userId}`;
-  logApiCall("GET", `${API_BASE_URL}${url}`, { userId });
+  logApiCall("GET", url, { userId });
 
   try {
     const response = await cartApi.get(url);
-    logApiResponse("GET", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("GET", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("GET", `${API_BASE_URL}${url}`, error);
+    logApiError("GET", url, error);
     throw error;
   }
 };
@@ -52,14 +62,14 @@ export const getCart = async (userId: string) => {
  */
 export const getCartSummary = async (userId: string) => {
   const url = `/${userId}/summary`;
-  logApiCall("GET", `${API_BASE_URL}${url}`, { userId });
+  logApiCall("GET", url, { userId });
 
   try {
     const response = await cartApi.get(url);
-    logApiResponse("GET", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("GET", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("GET", `${API_BASE_URL}${url}`, error);
+    logApiError("GET", url, error);
     throw error;
   }
 };
@@ -70,14 +80,14 @@ export const getCartSummary = async (userId: string) => {
  */
 export const getCartCount = async (userId: string) => {
   const url = `/${userId}/count`;
-  logApiCall("GET", `${API_BASE_URL}${url}`, { userId });
+  logApiCall("GET", url, { userId });
 
   try {
     const response = await cartApi.get(url);
-    logApiResponse("GET", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("GET", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("GET", `${API_BASE_URL}${url}`, error);
+    logApiError("GET", url, error);
     throw error;
   }
 };
@@ -93,14 +103,14 @@ export const addToCart = async (
 ) => {
   const url = `/${userId}/add`;
   const data = { productId, quantity };
-  logApiCall("POST", `${API_BASE_URL}${url}`, { userId, ...data });
+  logApiCall("POST", url, { userId, ...data });
 
   try {
     const response = await cartApi.post(url, data);
-    logApiResponse("POST", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("POST", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("POST", `${API_BASE_URL}${url}`, error);
+    logApiError("POST", url, error);
     throw error;
   }
 };
@@ -116,14 +126,14 @@ export const updateCartItem = async (
 ) => {
   const url = `/${userId}/item/${productId}`;
   const data = { quantity };
-  logApiCall("PUT", `${API_BASE_URL}${url}`, { userId, productId, ...data });
+  logApiCall("PUT", url, { userId, productId, ...data });
 
   try {
     const response = await cartApi.put(url, data);
-    logApiResponse("PUT", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("PUT", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("PUT", `${API_BASE_URL}${url}`, error);
+    logApiError("PUT", url, error);
     throw error;
   }
 };
@@ -134,14 +144,14 @@ export const updateCartItem = async (
  */
 export const removeFromCart = async (userId: string, productId: string) => {
   const url = `/${userId}/item/${productId}`;
-  logApiCall("DELETE", `${API_BASE_URL}${url}`, { userId, productId });
+  logApiCall("DELETE", url, { userId, productId });
 
   try {
     const response = await cartApi.delete(url);
-    logApiResponse("DELETE", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("DELETE", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("DELETE", `${API_BASE_URL}${url}`, error);
+    logApiError("DELETE", url, error);
     throw error;
   }
 };
@@ -152,14 +162,14 @@ export const removeFromCart = async (userId: string, productId: string) => {
  */
 export const clearCart = async (userId: string) => {
   const url = `/${userId}/clear`;
-  logApiCall("DELETE", `${API_BASE_URL}${url}`, { userId });
+  logApiCall("DELETE", url, { userId });
 
   try {
     const response = await cartApi.delete(url);
-    logApiResponse("DELETE", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("DELETE", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("DELETE", `${API_BASE_URL}${url}`, error);
+    logApiError("DELETE", url, error);
     throw error;
   }
 };
@@ -171,14 +181,14 @@ export const clearCart = async (userId: string) => {
 export const updateShipping = async (userId: string, shippingCost: number) => {
   const url = `/${userId}/shipping`;
   const data = { shippingCost };
-  logApiCall("PUT", `${API_BASE_URL}${url}`, { userId, ...data });
+  logApiCall("PUT", url, { userId, ...data });
 
   try {
     const response = await cartApi.put(url, data);
-    logApiResponse("PUT", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("PUT", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("PUT", `${API_BASE_URL}${url}`, error);
+    logApiError("PUT", url, error);
     throw error;
   }
 };
@@ -189,14 +199,14 @@ export const updateShipping = async (userId: string, shippingCost: number) => {
  */
 export const validateCart = async (userId: string) => {
   const url = `/${userId}/validate`;
-  logApiCall("POST", `${API_BASE_URL}${url}`, { userId });
+  logApiCall("POST", url, { userId });
 
   try {
     const response = await cartApi.post(url);
-    logApiResponse("POST", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("POST", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("POST", `${API_BASE_URL}${url}`, error);
+    logApiError("POST", url, error);
     throw error;
   }
 };
@@ -211,14 +221,14 @@ export const validateCart = async (userId: string) => {
  */
 export const getCartStatistics = async () => {
   const url = "/admin/statistics";
-  logApiCall("GET", `${API_BASE_URL}${url}`);
+  logApiCall("GET", url);
 
   try {
     const response = await cartApi.get(url);
-    logApiResponse("GET", `${API_BASE_URL}${url}`, response.data);
+    logApiResponse("GET", url, response.data);
     return response.data;
   } catch (error) {
-    logApiError("GET", `${API_BASE_URL}${url}`, error);
+    logApiError("GET", url, error);
     throw error;
   }
 };

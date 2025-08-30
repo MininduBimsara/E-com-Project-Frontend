@@ -1,4 +1,4 @@
-// cartSlice.tsx - Redux slice for cart state management
+// cartSlice.tsx - Redux slice for cart state management with enhanced debugging
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type {
   Cart,
@@ -58,6 +58,23 @@ const initialState: CartState = {
 };
 
 // ==========================================
+// LOGGING UTILITY
+// ==========================================
+
+const logSliceAction = (action: string, payload?: any, state?: any) => {
+  console.log(`🧩 [Cart Slice] ${action}`, payload ? { payload } : "");
+  if (state) {
+    console.log(`🧩 [Cart Slice] State after ${action}:`, {
+      hasCart: !!state.currentCart,
+      itemCount: state.currentCart?.totalItems || 0,
+      isOpen: state.isOpen,
+      loading: state.loading,
+      error: state.error,
+    });
+  }
+};
+
+// ==========================================
 // CART SLICE
 // ==========================================
 
@@ -67,13 +84,16 @@ const cartSlice = createSlice({
   reducers: {
     // ========== LOADING STATES ==========
     setLoading: (state, action: PayloadAction<boolean>) => {
+      logSliceAction("setLoading", action.payload);
       state.loading = action.payload;
       if (action.payload) {
         state.error = null;
       }
+      logSliceAction("setLoading", action.payload, state);
     },
 
     setAdding: (state, action: PayloadAction<boolean>) => {
+      logSliceAction("setAdding", action.payload);
       state.adding = action.payload;
       if (action.payload) {
         state.error = null;
@@ -81,6 +101,7 @@ const cartSlice = createSlice({
     },
 
     setUpdating: (state, action: PayloadAction<boolean>) => {
+      logSliceAction("setUpdating", action.payload);
       state.updating = action.payload;
       if (action.payload) {
         state.error = null;
@@ -88,6 +109,7 @@ const cartSlice = createSlice({
     },
 
     setRemoving: (state, action: PayloadAction<boolean>) => {
+      logSliceAction("setRemoving", action.payload);
       state.removing = action.payload;
       if (action.payload) {
         state.error = null;
@@ -95,6 +117,7 @@ const cartSlice = createSlice({
     },
 
     setClearing: (state, action: PayloadAction<boolean>) => {
+      logSliceAction("setClearing", action.payload);
       state.clearing = action.payload;
       if (action.payload) {
         state.error = null;
@@ -102,6 +125,7 @@ const cartSlice = createSlice({
     },
 
     setValidating: (state, action: PayloadAction<boolean>) => {
+      logSliceAction("setValidating", action.payload);
       state.validating = action.payload;
       if (action.payload) {
         state.error = null;
@@ -110,26 +134,38 @@ const cartSlice = createSlice({
 
     // ========== CART DATA ==========
     setCart: (state, action: PayloadAction<Cart>) => {
+      logSliceAction("setCart", {
+        userId: action.payload.userId,
+        itemCount: action.payload.items?.length || 0,
+        total: action.payload.total,
+      });
+
       state.currentCart = action.payload;
       state.lastFetched = new Date().toISOString();
       state.error = null;
+
+      logSliceAction("setCart", null, state);
     },
 
     setCartSummary: (state, action: PayloadAction<CartSummary>) => {
+      logSliceAction("setCartSummary", action.payload);
       state.cartSummary = action.payload;
       state.error = null;
     },
 
     clearCartData: (state) => {
+      logSliceAction("clearCartData");
       state.currentCart = null;
       state.cartSummary = null;
       state.validationResult = null;
       state.hasValidationIssues = false;
       state.lastFetched = null;
+      logSliceAction("clearCartData", null, state);
     },
 
     // ========== ERROR HANDLING ==========
     setError: (state, action: PayloadAction<string>) => {
+      logSliceAction("setError", action.payload);
       state.error = action.payload;
       state.loading = false;
       state.adding = false;
@@ -140,24 +176,32 @@ const cartSlice = createSlice({
     },
 
     clearError: (state) => {
+      logSliceAction("clearError");
       state.error = null;
     },
 
     // ========== UI STATE ==========
     openCart: (state) => {
+      logSliceAction("openCart");
       state.isOpen = true;
+      logSliceAction("openCart", null, state);
     },
 
     closeCart: (state) => {
+      logSliceAction("closeCart");
       state.isOpen = false;
+      logSliceAction("closeCart", null, state);
     },
 
     toggleCart: (state) => {
+      logSliceAction("toggleCart", { currentState: state.isOpen });
       state.isOpen = !state.isOpen;
+      logSliceAction("toggleCart", null, state);
     },
 
     // ========== ACTION TRACKING ==========
     setLastAction: (state, action: PayloadAction<string>) => {
+      logSliceAction("setLastAction", action.payload);
       state.lastAction = action.payload;
     },
 
@@ -166,12 +210,17 @@ const cartSlice = createSlice({
       state,
       action: PayloadAction<CartValidationResult>
     ) => {
+      logSliceAction("setValidationResult", {
+        valid: action.payload.valid,
+        issuesCount: action.payload.issues?.length || 0,
+      });
       state.validationResult = action.payload;
       state.hasValidationIssues = !action.payload.valid;
       state.error = null;
     },
 
     clearValidationResult: (state) => {
+      logSliceAction("clearValidationResult");
       state.validationResult = null;
       state.hasValidationIssues = false;
     },
@@ -181,12 +230,16 @@ const cartSlice = createSlice({
       state,
       action: PayloadAction<{ productId: string; quantity: number }>
     ) => {
+      logSliceAction("updateLocalQuantity", action.payload);
+
       if (state.currentCart) {
         const item = state.currentCart.items.find(
           (item) => item.productId === action.payload.productId
         );
         if (item) {
+          const oldQuantity = item.quantity;
           item.quantity = action.payload.quantity;
+
           // Recalculate totals
           state.currentCart.totalItems = state.currentCart.items.reduce(
             (sum, item) => sum + item.quantity,
@@ -198,15 +251,29 @@ const cartSlice = createSlice({
           );
           state.currentCart.total =
             state.currentCart.subtotal + state.currentCart.shipping;
+
+          console.log(
+            `🧩 [Cart Slice] Updated quantity for ${action.payload.productId}: ${oldQuantity} → ${action.payload.quantity}`
+          );
+          logSliceAction("updateLocalQuantity", null, state);
+        } else {
+          console.warn(
+            `🧩 [Cart Slice] Item ${action.payload.productId} not found for quantity update`
+          );
         }
       }
     },
 
     removeLocalItem: (state, action: PayloadAction<string>) => {
+      logSliceAction("removeLocalItem", { productId: action.payload });
+
       if (state.currentCart) {
+        const itemsBefore = state.currentCart.items.length;
         state.currentCart.items = state.currentCart.items.filter(
           (item) => item.productId !== action.payload
         );
+        const itemsAfter = state.currentCart.items.length;
+
         // Recalculate totals
         state.currentCart.totalItems = state.currentCart.items.reduce(
           (sum, item) => sum + item.quantity,
@@ -218,11 +285,19 @@ const cartSlice = createSlice({
         );
         state.currentCart.total =
           state.currentCart.subtotal + state.currentCart.shipping;
+
+        console.log(
+          `🧩 [Cart Slice] Removed item ${action.payload}: ${itemsBefore} → ${itemsAfter} items`
+        );
+        logSliceAction("removeLocalItem", null, state);
       }
     },
 
     // ========== RESET ==========
-    resetCartState: () => initialState,
+    resetCartState: () => {
+      logSliceAction("resetCartState");
+      return initialState;
+    },
   },
 });
 

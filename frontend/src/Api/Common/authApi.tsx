@@ -1,3 +1,4 @@
+// frontend/src/Api/Common/authApi.tsx
 import { createAxiosInstance } from "../axiosConfig";
 import type { AxiosResponse } from "axios";
 
@@ -38,12 +39,17 @@ const API_URL =
 // Create axios instance using centralized configuration
 const authApiClient = createAxiosInstance(API_URL);
 
+// Ensure cookies are always sent with requests
+authApiClient.defaults.withCredentials = true;
+
 // Auth API functions
 export const authApi = {
   // User registration
   register: async (userData: RegisterUserData | FormData): Promise<User> => {
     try {
-      let response: AxiosResponse<{ user: User }>;
+      console.log("🔍 [authApi.register] Starting registration...");
+
+      let response: AxiosResponse<{ user: User; token?: string }>;
 
       if (userData instanceof FormData) {
         // If FormData is provided (with file upload)
@@ -51,29 +57,60 @@ export const authApi = {
           headers: {
             "Content-Type": "multipart/form-data",
           },
+          withCredentials: true,
         });
       } else {
         // For data without file upload
-        response = await authApiClient.post("/register", {
-          username: userData.username,
-          email: userData.email,
-          password: userData.password,
-        });
+        response = await authApiClient.post(
+          "/register",
+          {
+            username: userData.username,
+            email: userData.email,
+            password: userData.password,
+          },
+          {
+            withCredentials: true,
+          }
+        );
       }
 
-      return response.data.user;
+      console.log(
+        "🔍 [authApi.register] Registration response:",
+        response.data
+      );
+
+      const user = response.data.user;
+
+      // Normalize user ID
+      const normalizedUser: User = {
+        ...user,
+        id: user.id || user._id,
+        _id: user._id || user.id,
+      };
+
+      console.log(
+        "✅ [authApi.register] Registration successful:",
+        normalizedUser
+      );
+      return normalizedUser;
     } catch (error: any) {
+      console.error("❌ [authApi.register] Registration failed:", error);
       throw new Error(error.response?.data?.message || "Registration failed");
     }
   },
 
   login: async (credentials: Credentials): Promise<User> => {
     try {
+      console.log("🔍 [authApi.login] Starting login for:", credentials.email);
+
       const response: AxiosResponse<LoginResponse> = await authApiClient.post(
         "/login",
         {
           email: credentials.email,
           password: credentials.password,
+        },
+        {
+          withCredentials: true, // Ensure cookies are handled
         }
       );
 
@@ -82,14 +119,8 @@ export const authApi = {
 
       const user = response.data.user;
 
-      // Extract the ID from the nested user object structure
-      const userId =
-        user.id ||
-        user._id ||
-        (user.user && (user.user.id || user.user._id)) ||
-        user.userId ||
-        user.sub ||
-        user.uid;
+      // Extract the ID from the user object structure
+      const userId = user.id || user._id;
 
       console.log("🔍 [authApi.login] Extracted userId:", userId);
 
@@ -101,12 +132,12 @@ export const authApi = {
 
       console.log("🔍 [authApi.login] Normalized user:", normalizedUser);
 
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
-      }
+      // Don't store tokens in localStorage for cookie-based auth
+      // The server should handle JWT cookies automatically
 
       return normalizedUser;
     } catch (error: any) {
+      console.error("❌ [authApi.login] Login failed:", error);
       throw new Error(error.response?.data?.message || "Login failed");
     }
   },
@@ -114,25 +145,32 @@ export const authApi = {
   // User logout
   logout: async (): Promise<{ success: boolean }> => {
     try {
-      // console.log("🔐 [Auth API] Attempting logout...");
-      await authApiClient.post("/logout");
+      console.log("🔍 [authApi.logout] Attempting logout...");
 
-      // Clear any stored tokens (fallback)
-      localStorage.removeItem("token");
-      sessionStorage.removeItem("token");
-      // console.log(
-      //   "🔐 [Auth API] Logout successful - cookies should be cleared by backend"
-      // );
+      await authApiClient.post(
+        "/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      // Don't manually clear localStorage since we're using httpOnly cookies
+      console.log(
+        "✅ [authApi.logout] Logout successful - cookies cleared by backend"
+      );
 
       return { success: true };
-    } catch (error) {
-      // console.error("❌ [Auth API] Logout error:", error);
+    } catch (error: any) {
+      console.error("❌ [authApi.logout] Logout error:", error);
       throw new Error("Logout failed");
     }
   },
 
   verifyAuth: async (): Promise<User> => {
     try {
+      console.log("🔍 [authApi.verifyAuth] Verifying authentication...");
+
       const response: AxiosResponse<{ user?: User }> = await authApiClient.get(
         "/verify",
         {
@@ -140,26 +178,28 @@ export const authApi = {
         }
       );
 
-      console.log("🔍 [Auth API] Full verify response:", response.data);
-      console.log("🔍 [Auth API] User from response:", response.data.user);
+      console.log(
+        "🔍 [authApi.verifyAuth] Full verify response:",
+        response.data
+      );
+      console.log(
+        "🔍 [authApi.verifyAuth] User from response:",
+        response.data.user
+      );
 
       if (response.data.user) {
         const user = response.data.user;
 
         // Log all properties to understand the structure
-        console.log("🔍 [Auth API] User object keys:", Object.keys(user));
-        console.log("🔍 [Auth API] User object values:", Object.values(user));
+        console.log(
+          "🔍 [authApi.verifyAuth] User object keys:",
+          Object.keys(user)
+        );
 
-        // Try different ways to extract the ID based on your object structure
-        const userId =
-          user.id ||
-          user._id ||
-          (user.user && (user.user.id || user.user._id)) ||
-          user.userId ||
-          user.sub ||
-          user.uid;
+        // Extract the ID from the user object structure
+        const userId = user.id || user._id;
 
-        console.log("🔍 [Auth API] Final extracted userId:", userId);
+        console.log("🔍 [authApi.verifyAuth] Final extracted userId:", userId);
 
         const normalizedUser: User = {
           ...user,
@@ -167,12 +207,19 @@ export const authApi = {
           _id: userId,
         };
 
-        console.log("✅ [Auth API] Final normalized user:", normalizedUser);
+        console.log(
+          "✅ [authApi.verifyAuth] Final normalized user:",
+          normalizedUser
+        );
         return normalizedUser;
       } else {
         throw new Error("No user authenticated");
       }
     } catch (error: any) {
+      console.log(
+        "ℹ️ [authApi.verifyAuth] Auth verification failed:",
+        error.response?.data?.message || error.message
+      );
       throw new Error(error.response?.data?.message || error.message);
     }
   },

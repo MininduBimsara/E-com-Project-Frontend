@@ -1,4 +1,8 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, {
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+} from "axios";
 
 // Global Axios configuration
 const createAxiosInstance = (
@@ -17,11 +21,7 @@ const createAxiosInstance = (
   // Request interceptor for cookie-based authentication
   instance.interceptors.request.use(
     (config) => {
-      console.log("🔐 [Axios Interceptor] Request URL:", config.url);
-      console.log(
-        "🔐 [Axios Interceptor] withCredentials:",
-        config.withCredentials
-      );
+     
 
       // For cookie-based auth, we don't need to manually add Authorization headers
       // The withCredentials: true setting will automatically send cookies
@@ -30,14 +30,10 @@ const createAxiosInstance = (
         localStorage.getItem("token") || sessionStorage.getItem("token");
 
       if (storedToken) {
-        console.log(
-          "🔐 [Axios Interceptor] Found stored token, adding Authorization header"
-        );
+       
         config.headers.Authorization = `Bearer ${storedToken}`;
       } else {
-        console.log(
-          "🔐 [Axios Interceptor] No stored token - relying on cookies for authentication"
-        );
+       // console.log("🔐 [Axios Interceptor] No stored token - relying on cookies for authentication");
       }
 
       return config;
@@ -55,22 +51,12 @@ const createAxiosInstance = (
         localStorage.removeItem("token");
         sessionStorage.removeItem("token");
 
-        console.log(
-          "🔐 [Axios Interceptor] 401 Unauthorized - authentication failed"
-        );
-        console.log(
-          "🔐 [Axios Interceptor] Stored tokens cleared, cookies should be handled by backend"
-        );
-
+      
         // Don't redirect automatically - let components handle auth state
         // The verifyAuth thunk will handle setting isAuthenticated to false
       }
 
-      // Log errors for debugging
-      console.error(
-        "❌ [Axios Interceptor] API Error:",
-        error.response?.data || error.message
-      );
+      
 
       return Promise.reject(error);
     }
