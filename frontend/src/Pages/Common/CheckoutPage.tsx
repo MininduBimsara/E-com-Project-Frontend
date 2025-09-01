@@ -1,4 +1,4 @@
-// CheckoutPage.tsx - Comprehensive checkout with proper routing and debugging
+// CheckoutPage.tsx - Updated with proper order success flow
 import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
@@ -36,6 +36,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderData, setOrderData] = useState<any>(null);
 
   console.log("🛒 [CheckoutPage] Component rendered with:", {
     itemsCount: items.length,
@@ -140,7 +141,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       // Simulate order processing
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const orderData = createOrderData(
+      const createdOrderData = createOrderData(
         items,
         totalPrice,
         totalCarbonFootprint,
@@ -149,14 +150,16 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       );
 
       console.log("✅ [CheckoutPage] Order data created:", {
-        itemsCount: orderData.items?.length,
-        total: orderData.total,
-        shippingMethod: orderData.shippingMethod,
+        itemsCount: createdOrderData.items?.length,
+        total: createdOrderData.total,
+        shippingMethod: createdOrderData.shippingMethod,
       });
+
+      setOrderData(createdOrderData);
 
       if (onOrderComplete) {
         console.log("🛒 [CheckoutPage] Calling onOrderComplete callback");
-        onOrderComplete(orderData);
+        onOrderComplete(createdOrderData);
       }
 
       console.log("🛒 [CheckoutPage] Clearing cart and moving to completion");
@@ -169,21 +172,24 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }
   };
 
-  const handleOrderComplete = (orderData: any) => {
+  const handleOrderComplete = (completedOrderData: any) => {
     console.log(
       "🛒 [CheckoutPage] handleOrderComplete called with:",
-      orderData
+      completedOrderData
     );
+
+    // Store order data for potential use
+    setOrderData(completedOrderData);
 
     // Handle successful PayPal payment
     if (onOrderComplete) {
       console.log("🛒 [CheckoutPage] Calling parent onOrderComplete");
-      onOrderComplete(orderData);
+      onOrderComplete(completedOrderData);
     }
 
-    console.log("🛒 [CheckoutPage] Clearing cart and completing order");
-    clearCart();
-    setCurrentStep(3);
+    // Note: Cart clearing and navigation are now handled in PaymentForm
+    // This prevents the checkout page from interfering with the redirect flow
+    console.log("🛒 [CheckoutPage] Order completion handled by PaymentForm");
   };
 
   const handleBackToCart = () => {
@@ -204,10 +210,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50/30 to-white flex items-center justify-center">
         <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-2xl font-light text-gray-800 mb-4">
             Authentication Required
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 mb-6 font-light">
             Please log in to continue with checkout
           </p>
           <button
@@ -229,7 +236,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           <h2 className="text-2xl font-light text-gray-800 mb-4">
             Your cart is empty
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 mb-6 font-light">
             Add some products to your cart before checking out
           </p>
           <button
@@ -301,7 +308,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   />
                 )}
 
-                {/* Step 3: Order Complete */}
+                {/* Step 3: Order Complete (Local completion - not PayPal success) */}
                 {currentStep === 3 && (
                   <OrderComplete selectedShipping={selectedShipping} />
                 )}

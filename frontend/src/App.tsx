@@ -26,6 +26,7 @@ import AuthDebugger from "./Components/Common/Cart/AuthDebugger";
 import CheckoutPage from "./Pages/Common/CheckoutPage";
 import Header from "./Components/Common/NavBar";
 import ContactPage from "./Pages/Common/ContactPage";
+import OrderSuccessPage from "./Components/Common/Checkout/OrderSuccessPage";
 
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
 
@@ -150,6 +151,9 @@ function AppContent() {
 
       {/* Auth Debugger - only in development */}
       <AuthDebugger />
+
+      {/* Order success route - NEW */}
+      <Route path="/order-success" element={<OrderSuccessPage />} />
     </div>
   );
 }
