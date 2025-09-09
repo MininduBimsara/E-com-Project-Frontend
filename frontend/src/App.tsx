@@ -22,7 +22,7 @@ import CartFlowDiagrams from "./Flow/CartFlow";
 // Import the cart system components
 import CartSidebar from "./Components/Common/Cart/CartSidebar";
 import CartInitializer from "./Components/Common/Cart/CartInitializer";
-import AuthDebugger from "./Components/Common/Cart/AuthDebugger";
+// import AuthDebugger from "./Components/Common/Cart/AuthDebugger";
 import CheckoutPage from "./Pages/Common/CheckoutPage";
 import Header from "./Components/Common/NavBar";
 import ContactPage from "./Pages/Common/ContactPage";
@@ -135,6 +135,8 @@ function AppContent() {
               </ProtectedAdminRoute>
             }
           />
+          {/* Order success route - NEW */}
+          <Route path="/order-success" element={<OrderSuccessPage />} />
         </Routes>
       </div>
 
@@ -150,10 +152,7 @@ function AppContent() {
       />
 
       {/* Auth Debugger - only in development */}
-      <AuthDebugger />
-
-      {/* Order success route - NEW */}
-      <Route path="/order-success" element={<OrderSuccessPage />} />
+      {/* <AuthDebugger /> */}
     </div>
   );
 }

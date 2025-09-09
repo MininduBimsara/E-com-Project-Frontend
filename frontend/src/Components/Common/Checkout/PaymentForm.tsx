@@ -1,13 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
-import {
-  Shield,
-  Loader2,
-  CheckCircle,
-  AlertCircle,
-  CreditCard,
-} from "lucide-react";
-import { PayPalButtons } from "@paypal/react-paypal-js";
+import { Shield, CheckCircle, AlertCircle, CreditCard } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -18,6 +11,7 @@ import { createOrder } from "../../../Redux/Thunks/orderThunks";
 import { useCart } from "../../../hooks/useCart";
 import type { AppDispatch, RootState } from "../../../Redux/Store/store";
 import type { FormData } from "../../../Types/checkout";
+import PayPalWrapper from "./PayPalWrapper";
 
 interface PaymentFormProps {
   formData: FormData;
@@ -41,149 +35,179 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
-  const [paypalStatus, setPaypalStatus] = useState<
-    "idle" | "processing" | "success" | "error"
-  >("idle");
-  const [paypalError, setPaypalError] = useState<string>("");
-  const [orderId, setOrderId] = useState<string>("");
 
-  // Redux loading/error states
-  const { loading: paymentLoading } = useSelector(
+  // Simple state for tracking overall payment status
+  const [paymentStatus, setPaymentStatus] = useState<{
+    status: "idle" | "success" | "failed";
+    message: string;
+    orderId: string;
+  }>({
+    status: "idle",
+    message: "",
+    orderId: "",
+  });
+
+  // Ref to store current order ID across renders
+  const currentOrderId = useRef<string>("");
+
+  // Get Redux states
+  const { loading: paymentLoading, error: paymentError } = useSelector(
     (state: RootState) => state.payment
   );
-  const { loading: orderLoading } = useSelector(
+  const { loading: orderLoading, error: orderError } = useSelector(
     (state: RootState) => state.orders
   );
-  const isLoading = isSubmitting || paymentLoading || orderLoading;
 
-  // Helper: Map cart items to OrderItem type
-  const mapCartItemsToOrderItems = () =>
-    items.map((item) => ({
-      productId: item.id,
-      quantity: item.quantity,
-      priceAtOrder: item.price,
-      productName: item.name,
-      productImageUrl: item.image,
-    }));
+  // Memoized order data - only recreates when form data changes
+  const orderData = useMemo(
+    () => ({
+      items: items.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        priceAtOrder: item.price,
+        productName: item.name,
+        productImageUrl: item.image,
+      })),
+      shippingAddress: {
+        street: formData.address,
+        city: formData.city,
+        state: formData.province,
+        zipCode: formData.postalCode,
+        country: "LK",
+      },
+      paymentMethod: "paypal",
+    }),
+    [
+      items,
+      formData.address,
+      formData.city,
+      formData.province,
+      formData.postalCode,
+    ]
+  );
 
-  // PayPal handlers
-  const handleCreatePayPalOrder = async () => {
+  // PayPal Create Order Handler
+  const handleCreatePayPalOrder = useCallback(async (): Promise<string> => {
     try {
-      console.log("🔄 [PaymentForm] Creating PayPal order...");
-      setPaypalStatus("processing");
-      setPaypalError("");
+      console.log("Creating order for PayPal...");
 
-      // Create order first (with correct payload)
-      const orderData = {
-        items: mapCartItemsToOrderItems(),
-        shippingAddress: {
-          street: formData.address,
-          city: formData.city,
-          state: formData.province,
-          zipCode: formData.postalCode,
-          country: "LK", // Sri Lanka
-        },
-        paymentMethod: "paypal",
-      };
-
-      console.log("🔄 [PaymentForm] Creating backend order with data:", {
-        itemsCount: orderData.items.length,
-        shippingCity: orderData.shippingAddress.city,
-        paymentMethod: orderData.paymentMethod,
-      });
-
+      // Create order first
       const order = await dispatch(createOrder(orderData)).unwrap();
-      setOrderId(order._id);
+      const orderId = order._id;
 
-      console.log("✅ [PaymentForm] Backend order created:", {
-        orderId: order._id,
-        amount: totalPrice,
-      });
+      // Store order ID
+      currentOrderId.current = orderId;
+      setPaymentStatus((prev) => ({ ...prev, orderId }));
+
+      console.log("Order created successfully:", orderId);
 
       // Create PayPal order
       const paypalOrder = await dispatch(
-        createPayPalOrder({ orderId: order._id, amount: totalPrice })
+        createPayPalOrder({ orderId, amount: totalPrice })
       ).unwrap();
 
-      console.log(
-        "✅ [PaymentForm] PayPal order created:",
-        paypalOrder.paypalOrderId
-      );
+      console.log("PayPal order created:", paypalOrder.paypalOrderId);
 
       return paypalOrder.paypalOrderId;
     } catch (error) {
-      console.error("❌ [PaymentForm] Create PayPal order error:", error);
+      console.error("Failed to create PayPal order:", error);
       const errorMessage =
-        (error as Error)?.message || "Failed to create PayPal order";
-      setPaypalError(errorMessage);
-      setPaypalStatus("error");
+        (error as Error)?.message || "Failed to create order";
+      setPaymentStatus({
+        status: "failed",
+        message: errorMessage,
+        orderId: currentOrderId.current,
+      });
       throw error;
     }
-  };
+  }, [dispatch, orderData, totalPrice]);
 
-  const handleApprovePayPal = async (data: { orderID: string }) => {
-    try {
-      console.log("🔄 [PaymentForm] Capturing PayPal payment...", {
-        orderId,
-        paypalOrderId: data.orderID,
-      });
-      setPaypalStatus("processing");
+  // PayPal Approve Handler
+  const handlePayPalApprove = useCallback(
+    async (data: { orderID: string }) => {
+      try {
+        console.log("Processing PayPal approval...");
 
-      // Capture the payment
-      const paymentResult = await dispatch(
-        capturePayPalPayment({ orderId, paypalOrderId: data.orderID })
-      ).unwrap();
+        const orderId = currentOrderId.current;
+        if (!orderId) {
+          throw new Error("Order ID not found");
+        }
 
-      console.log("✅ [PaymentForm] PayPal payment captured:", {
-        paymentId: paymentResult.payment._id,
-        status: paymentResult.payment.status,
-      });
+        // Capture PayPal payment
+        const paymentResult = await dispatch(
+          capturePayPalPayment({ orderId, paypalOrderId: data.orderID })
+        ).unwrap();
 
-      setPaypalStatus("success");
+        console.log("PayPal payment captured successfully");
 
-      // Clear cart immediately after successful payment
-      console.log("🔄 [PaymentForm] Clearing cart...");
-      clearCart();
+        // Update status to success
+        setPaymentStatus({
+          status: "success",
+          message: "Payment completed successfully!",
+          orderId,
+        });
 
-      // Call the parent's order complete handler if provided
-      if (onOrderComplete) {
-        console.log("🔄 [PaymentForm] Calling onOrderComplete callback");
-        onOrderComplete({
-          orderId: orderId,
-          paymentId: paymentResult.payment._id,
-          paymentResult,
+        // Clear cart
+        clearCart();
+
+        // Call completion handler
+        if (onOrderComplete) {
+          onOrderComplete(paymentResult);
+        }
+
+        // Navigate to success page
+        setTimeout(() => {
+          navigate("/order-success", {
+            state: {
+              orderId: orderId,
+              paymentId: paymentResult.payment._id,
+            },
+          });
+        }, 2000);
+      } catch (error) {
+        console.error("PayPal payment capture failed:", error);
+        const errorMessage =
+          (error as Error)?.message || "Payment processing failed";
+        setPaymentStatus({
+          status: "failed",
+          message: errorMessage,
+          orderId: currentOrderId.current,
         });
       }
+    },
+    [dispatch, clearCart, onOrderComplete, navigate]
+  );
 
-      // Navigate to order success page with order details
-      console.log("🔄 [PaymentForm] Navigating to order success page");
-      navigate("/order-success", {
-        state: {
-          orderId: orderId,
-          paymentId: paymentResult.payment._id,
-          orderData: paymentResult,
-        },
-        replace: true, // Replace current history entry
-      });
-    } catch (error) {
-      console.error("❌ [PaymentForm] PayPal payment capture error:", error);
-      const errorMessage = (error as Error)?.message || "PayPal payment failed";
-      setPaypalError(errorMessage);
-      setPaypalStatus("error");
-    }
-  };
+  // PayPal Error Handler
+  const handlePayPalError = useCallback((error: any) => {
+    console.error("PayPal error:", error);
+    setPaymentStatus({
+      status: "failed",
+      message: "PayPal payment failed. Please try again.",
+      orderId: currentOrderId.current,
+    });
+  }, []);
 
-  const handlePayPalError = (error: any) => {
-    console.error("❌ [PaymentForm] PayPal Error:", error);
-    setPaypalError("PayPal payment failed. Please try again.");
-    setPaypalStatus("error");
-  };
+  // PayPal Cancel Handler
+  const handlePayPalCancel = useCallback(() => {
+    console.log("PayPal payment cancelled by user");
+    setPaymentStatus({
+      status: "idle",
+      message: "",
+      orderId: "",
+    });
+    currentOrderId.current = "";
+  }, []);
 
-  const handlePayPalCancel = () => {
-    console.log("⚠️ [PaymentForm] PayPal payment cancelled by user");
-    setPaypalStatus("idle");
-    setPaypalError("");
-  };
+  // Reset payment status when trying again
+  const handleTryAgain = useCallback(() => {
+    setPaymentStatus({
+      status: "idle",
+      message: "",
+      orderId: "",
+    });
+    currentOrderId.current = "";
+  }, []);
 
   const stepVariants = {
     hidden: { opacity: 0, x: 20 },
@@ -206,81 +230,83 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         Payment Information
       </h2>
 
-      {/* PayPal Status Messages */}
-      {paypalStatus !== "idle" && (
+      {/* Payment Status Messages */}
+      {paymentStatus.status !== "idle" && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className={`mb-6 p-4 rounded-xl border ${
-            paypalStatus === "success"
+            paymentStatus.status === "success"
               ? "bg-green-50 border-green-200 text-green-700"
-              : paypalStatus === "error"
-              ? "bg-red-50 border-red-200 text-red-700"
-              : "bg-blue-50 border-blue-200 text-blue-700"
+              : "bg-red-50 border-red-200 text-red-700"
           }`}
         >
           <div className="flex items-center space-x-2">
-            {paypalStatus === "processing" && (
-              <Loader2 className="w-5 h-5 animate-spin" />
+            {paymentStatus.status === "success" && (
+              <CheckCircle className="w-5 h-5" />
             )}
-            {paypalStatus === "success" && <CheckCircle className="w-5 h-5" />}
-            {paypalStatus === "error" && <AlertCircle className="w-5 h-5" />}
-            <span className="font-light">
-              {paypalStatus === "processing" && "Processing PayPal payment..."}
-              {paypalStatus === "success" &&
-                "PayPal payment successful! Redirecting..."}
-              {paypalStatus === "error" && paypalError}
-            </span>
+            {paymentStatus.status === "failed" && (
+              <AlertCircle className="w-5 h-5" />
+            )}
+            <span className="font-light">{paymentStatus.message}</span>
+          </div>
+          {paymentStatus.status === "failed" && (
+            <button
+              onClick={handleTryAgain}
+              className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-light underline"
+            >
+              Try Again
+            </button>
+          )}
+        </motion.div>
+      )}
+
+      {/* Redux Error Messages */}
+      {(paymentError || orderError) && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-xl border bg-red-50 border-red-200 text-red-700"
+        >
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-light">{paymentError || orderError}</span>
           </div>
         </motion.div>
       )}
 
-      {/* PayPal Payment Section */}
       <div className="space-y-6">
         <div className="text-center">
           <h3 className="text-lg font-light text-gray-800 mb-2">
             Complete your payment with PayPal
           </h3>
-          <p className="text-sm font-light text-gray-600 mb-2">
+          <p className="text-sm font-light text-gray-600 mb-6">
             Secure checkout powered by PayPal. You can pay with your PayPal
             account or credit/debit card.
           </p>
-          <p className="text-lg font-light text-green-700 italic mb-6">
-            Total: Rs. {totalPrice.toLocaleString()}
-          </p>
         </div>
 
-        {/* PayPal Buttons */}
-        {totalPrice > 0 && paypalStatus !== "success" && (
-          <div className="max-w-md mx-auto">
-            <PayPalButtons
-              createOrder={handleCreatePayPalOrder}
-              onApprove={handleApprovePayPal}
-              onError={handlePayPalError}
-              onCancel={handlePayPalCancel}
-              disabled={isLoading || paypalStatus === "processing"}
-              style={{
-                layout: "vertical",
-                color: "blue",
-                shape: "rect",
-                label: "pay",
-                height: 50,
-                tagline: false,
-              }}
-              forceReRender={[totalPrice, paypalStatus]}
-            />
-          </div>
+        {/* PayPal Payment Section */}
+        {paymentStatus.status !== "success" && totalPrice > 0 && (
+          <PayPalWrapper
+            amount={totalPrice}
+            disabled={isSubmitting || paymentLoading || orderLoading}
+            onCreateOrder={handleCreatePayPalOrder}
+            onApprove={handlePayPalApprove}
+            onError={handlePayPalError}
+            onCancel={handlePayPalCancel}
+          />
         )}
 
-        {/* Success State */}
-        {paypalStatus === "success" && (
+        {/* Success Message */}
+        {paymentStatus.status === "success" && (
           <div className="text-center py-8">
             <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-            <h3 className="text-xl font-light text-green-800 mb-2">
+            <h3 className="text-xl font-light text-gray-800 mb-2">
               Payment Successful!
             </h3>
             <p className="text-gray-600 font-light">
-              Redirecting you to order confirmation...
+              Redirecting to order confirmation...
             </p>
           </div>
         )}
@@ -334,23 +360,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onPrevious}
-          disabled={paypalStatus === "processing" || paypalStatus === "success"}
-          className={`border border-gray-300 px-8 py-3 font-light tracking-[0.1em] text-sm transition-all duration-500 ${
-            paypalStatus === "processing" || paypalStatus === "success"
-              ? "text-gray-400 border-gray-200 cursor-not-allowed"
-              : "text-gray-600 hover:border-gray-400"
-          }`}
+          disabled={isSubmitting || paymentLoading || orderLoading}
+          className="border border-gray-300 text-gray-600 px-8 py-3 font-light tracking-[0.1em] text-sm hover:border-gray-400 transition-all duration-500 disabled:opacity-50"
         >
           Back to Shipping
         </motion.button>
 
         <div className="text-sm font-light text-gray-600 flex items-center">
-          {paypalStatus === "success" ? (
+          {paymentStatus.status === "failed" ? (
+            <span className="text-red-600">
+              Please try again or contact support
+            </span>
+          ) : paymentStatus.status === "success" ? (
             <span className="text-green-600">
-              Redirecting to confirmation...
+              Payment completed successfully!
             </span>
           ) : (
-            "Complete payment using PayPal button above"
+            <span>Complete payment using PayPal button above</span>
           )}
         </div>
       </div>
